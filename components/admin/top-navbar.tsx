@@ -1,8 +1,43 @@
 "use client";
 
+import { supabaseClient } from "@/lib/supabase/client";
+import { useEffect, useState } from "react";
 import { Bell, Moon, Search } from "lucide-react";
 
 export default function TopNavbar() {
+  const [user, setUser] = useState<any>(null);
+  const [profile, setProfile] = useState<any>(null);
+
+  // Fetch user from supabase
+  useEffect(() => {
+    const loadUser = async () => {
+      const { data: { user } } = await supabaseClient.auth.getUser();
+
+      if (!user) return;
+
+      setUser(user);
+
+      const { data: profile } = await supabaseClient
+        .from("profiles")
+        .select("role, full_name")
+        .eq("id", user.id)
+        .single();
+
+      setProfile(profile);
+    };
+
+    loadUser();
+  }, []);
+
+  // Get Initials
+  const getInitials = (full_name: string) => {
+    return full_name
+      ?.split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase();
+  };
+
   return (
     <header className="fixed left-64 right-0 top-0 z-30 h-20 border-b border-white/30 bg-white/70 px-8 backdrop-blur-xl">
 
@@ -34,17 +69,28 @@ export default function TopNavbar() {
           </button>
 
           <div className="flex items-center gap-3">
-            <div className="text-right">
-              <p className="font-semibold">
-                Admin
+
+            {/* USER INFO */}
+            <div className="flex flex-col text-right leading-tight">
+
+              {/* NAME */}
+              <p
+                className="font-semibold text-sm text-gray-900 max-w-[140px] truncate"
+                title={profile?.full_name}
+              >
+                {profile?.full_name || "User"}
               </p>
 
-              <p className="text-xs text-gray-500">
-                System Administrator
+              {/* ROLE */}
+              <p className="text-xs text-gray-500 capitalize">
+                {profile?.role || "user"}
               </p>
             </div>
 
-            <div className="h-10 w-10 rounded-full bg-gradient-to-r from-indigo-600 to-purple-600"></div>
+            {/* AVATAR */}
+            <div className="w-10 h-10 rounded-full bg-purple-600 flex items-center justify-center text-white font-semibold uppercase">
+              {profile?.full_name?.charAt(0) || "U"}
+            </div>
 
           </div>
 

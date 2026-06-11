@@ -80,7 +80,6 @@ export default function UsersTable() {
   return (
     <div className="rounded-2xl overflow-hidden border border-white/40 bg-white/70 backdrop-blur-xl shadow-xl">
 
-      {/* TOP FILTER BAR (UI only for now) */}
       <div className="p-4 border-b border-white/20 flex justify-between items-center bg-white/20">
         <div className="flex gap-2">
           <button onClick={() => setFilter("all")}
@@ -105,10 +104,6 @@ export default function UsersTable() {
             Users
           </button>
         </div>
-
-        <button className="p-2 hover:bg-white/50 rounded-lg text-gray-600">
-          ⛃
-        </button>
       </div>
 
       {/* TABLE */}
@@ -135,7 +130,7 @@ export default function UsersTable() {
                 <div className="flex items-center gap-3">
 
                   {/* Avatar (fallback initial) */}
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold">
+                  <div className="w-10 h-10 rounded-full bg-purple-600 flex items-center justify-center text-white font-bold">
                     {u.email?.[0]?.toUpperCase()}
                   </div>
 
@@ -178,11 +173,6 @@ export default function UsersTable() {
                 </div>
               </td>
 
-              {/* LAST ACTIVE */}
-              {/* <td className="px-6 py-4 text-sm text-gray-500">
-                {u.last_active || "Just added"}
-              </td> */}
-
               {/* ACTIONS */}
               <td className="px-6 py-4 text-right">
                 <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition">
@@ -195,9 +185,6 @@ export default function UsersTable() {
                     <Edit size={18} />
                   </button>
 
-                  {/* <button className="p-2 hover:bg-red-50 text-red-500 rounded-lg">
-                    <Trash2 size={18} />
-                  </button> */}
                   <button
                     onClick={() => handleDelete(u.id)}
                     disabled={deletingId === u.id}
@@ -217,13 +204,13 @@ export default function UsersTable() {
       {/* FOOTER */}
       <div className="p-4 border-t border-white/20 flex justify-between items-center bg-white/10">
         <p className="text-sm text-gray-500">
-          Showing {users.length} users
+          Showing {filteredUsers.length} out of {users.length} users.
         </p>
 
-        <div className="flex gap-2">
+        {/* <div className="flex gap-2">
           <button className="px-3 py-1 rounded border text-gray-500">1</button>
           <button className="px-3 py-1 rounded border hover:bg-white/50">2</button>
-        </div>
+        </div> */}
       </div>
 
       <EditUserModal

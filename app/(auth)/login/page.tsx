@@ -13,45 +13,45 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
-  e.preventDefault();
+  const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
 
-  const { data, error } = await supabaseClient.auth.signInWithPassword({
-    email,
-    password,
-  });
+    const { data, error } = await supabaseClient.auth.signInWithPassword({
+      email,
+      password,
+    });
 
-  if (error) {
-    console.log("LOGIN ERROR:", error.message);
-    return;
-  }
+    if (error) {
+      console.log("LOGIN ERROR:", error.message);
+      return;
+    }
 
-  const user = data?.user;
+    const user = data?.user;
 
-  if (!user) {
-    console.log("No user returned");
-    return;
-  }
+    if (!user) {
+      console.log("No user returned");
+      return;
+    }
 
-  const { data: profile, error: profileError } = await supabaseClient
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .maybeSingle();
+    const { data: profile, error: profileError } = await supabaseClient
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .maybeSingle();
 
-  console.log("PROFILE ERROR:", profileError);
+    console.log("PROFILE ERROR:", profileError);
 
-  if (profileError) {
-    console.log("PROFILE ERROR:", profileError.message);
-    return;
-  }
+    if (profileError) {
+      console.log("PROFILE ERROR:", profileError.message);
+      return;
+    }
 
-  if (profile?.role === "admin") {
-    router.replace("/users");
-  } else {
-    router.replace("/meet");
-  }
-};
+    if (profile?.role === "admin") {
+      router.replace("/users");
+    } else {
+      router.replace("/meet");
+    }
+  };
 
   return (
     <main className="min-h-screen flex">
@@ -139,23 +139,30 @@ const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
             {/* button */}
             <Button
               type="submit"
-              className="w-full h-11 bg-gradient-to-r from-pink-500 to-purple-600 hover:opacity-90"
+              className="
+    w-full
+    h-11
+    border-purple-600
+    text-white
+    bg-purple-600
+    transition-colors
+  "
             >
               Sign In
             </Button>
 
             {/* divider */}
-            <div className="flex items-center gap-4">
+            {/* <div className="flex items-center gap-4">
               <div className="h-px bg-gray-200 flex-1" />
               <span className="text-xs text-gray-400">OR</span>
               <div className="h-px bg-gray-200 flex-1" />
-            </div>
+            </div> */}
 
             {/* demo */}
-            <Button variant="outline" className="w-full h-11 gap-2">
+            {/* <Button variant="outline" className="w-full h-11 gap-2">
               <User className="h-4 w-4" />
               Continue as demo user
-            </Button>
+            </Button> */}
 
           </form>
 

@@ -5,6 +5,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog";
 
 import { Input } from "@/components/ui/input";
@@ -43,6 +44,7 @@ export default function EditUserModal({
   onUpdated,
 }: Props) {
   const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
   const [role, setRole] = useState("user");
   const [status, setStatus] = useState("active");
   const [loading, setLoading] = useState(false);
@@ -50,6 +52,7 @@ export default function EditUserModal({
   useEffect(() => {
     if (user) {
       setFullName(user.full_name || "");
+      setEmail(user.email || "");
       setRole(user.role || "user");
       setStatus(user.status || "active");
     }
@@ -64,11 +67,10 @@ export default function EditUserModal({
     try {
       const res = await fetch(`/api/users/${user.id}`, {
         method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           full_name: fullName,
+          email: email,
           role,
           status,
         }),
@@ -92,59 +94,95 @@ export default function EditUserModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg rounded-xl p-0 overflow-hidden bg-[#faf8ff] shadow-2xl">
-
-        {/* Header */}
-        <DialogHeader className="px-6 pt-6 pb-4 border-b">
-          <DialogTitle className="text-xl font-semibold">
+      <DialogContent
+        className="
+          max-w-[540px]
+          p-0
+          overflow-hidden
+          rounded-xl
+          bg-white/70
+          backdrop-blur-xl
+          border border-white/50
+          shadow-[0_20px_50px_-12px_rgba(99,102,241,0.15)]
+        "
+      >
+        {/* HEADER */}
+        <DialogHeader className="px-8 pt-8 pb-5">
+          <DialogTitle className="text-2xl font-semibold text-[#131b2e]">
             Edit User
           </DialogTitle>
-          <p className="text-sm text-gray-500 mt-1">
+
+          <DialogDescription className="text-sm text-[#464554] mt-1">
             Update member details and permissions
-          </p>
+          </DialogDescription>
         </DialogHeader>
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="px-6 py-5 space-y-4">
+        {/* FORM */}
+        <form onSubmit={handleSubmit} className="px-8 pb-6 space-y-5">
 
           {/* Full Name */}
-          <div className="space-y-1">
+          <div className="space-y-2">
             <Label>Full Name</Label>
             <Input
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
+              className="
+                bg-white/50
+                border border-outline-variant
+                focus-visible:ring-2 focus-visible:ring-[#4648d4]/20
+              "
             />
           </div>
 
-          {/* Email (readonly) */}
-          <div className="space-y-1">
+          {/* Email */}
+          <div className="space-y-2">
             <Label>Email</Label>
-            <Input value={user?.email || ""} disabled />
+            <Input
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="
+                bg-white/50
+                border border-outline-variant
+                focus-visible:ring-2 focus-visible:ring-[#4648d4]/20
+              "
+            />
           </div>
 
           {/* Role + Status */}
           <div className="grid grid-cols-2 gap-4">
 
-            <div className="space-y-1">
+            <div className="space-y-2">
               <Label>Role</Label>
               <Select value={role} onValueChange={setRole}>
-                <SelectTrigger>
+                <SelectTrigger
+                  className="
+                    bg-white/50
+                    border border-outline-variant
+                  "
+                >
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
+
+                <SelectContent className="z-[200]">
                   <SelectItem value="user">User</SelectItem>
                   <SelectItem value="admin">Admin</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
-            <div className="space-y-1">
+            <div className="space-y-2">
               <Label>Status</Label>
               <Select value={status} onValueChange={setStatus}>
-                <SelectTrigger>
+                <SelectTrigger
+                  className="
+                    bg-white/50
+                    border border-outline-variant
+                  "
+                >
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
+
+                <SelectContent className="z-[200]">
                   <SelectItem value="active">Active</SelectItem>
                   <SelectItem value="inactive">Inactive</SelectItem>
                 </SelectContent>
@@ -153,24 +191,37 @@ export default function EditUserModal({
 
           </div>
 
-          {/* Footer */}
-          <div className="flex justify-end gap-3 pt-4 border-t">
+          {/* FOOTER */}
+          <div className="flex justify-end gap-3 pt-4 border-t border-white/30">
 
             <Button
               type="button"
-              variant="outline"
+              variant="ghost"
               onClick={() => onOpenChange(false)}
+              className="
+                            rounded-xl
+                            text-[#464554]
+                            border-[#c7c4d7]
+                            hover:bg-[#dae2fd]
+                        "
             >
               Cancel
             </Button>
 
-            <Button disabled={loading}>
+            <Button
+              disabled={loading}
+              className="
+                bg-purple-600
+                text-white
+                hover:shadow-lg hover:shadow-[#4648d4]/30
+              "
+            >
               {loading ? "Updating..." : "Update User"}
             </Button>
 
           </div>
-        </form>
 
+        </form>
       </DialogContent>
     </Dialog>
   );

@@ -8,23 +8,26 @@ import CreateMeetingModal from "@/components/admin/create-meeting-modal";
 import JoinMeetingModal from "@/components/admin/join-meeting-modal";
 import MeetingRoom from "@/components/admin/meeting-room";
 
-// import { createRoom, roomExists } from "@/lib/meetingStore";
+import { Video, LogIn } from "lucide-react";
+
 import { socket } from "@/lib/socket";
 
 export default function MeetPage() {
 
   useEffect(() => {
+  console.log("PAGE LOADED");
+
   socket.on("connect", () => {
-    console.log("socket connected:", socket.id);
-    });
+    console.log("SOCKET CONNECTED:", socket.id);
+  });
+
   socket.on("room-users", (data) => {
-  console.log("ROOM STATE:", data);
-  setParticipants(data.users);
-}
-);
+    console.log("ROOM EVENT IN PAGE:", data);
+  });
 
   return () => {
     socket.off("connect");
+    socket.off("room-users");
   };
 }, []);
 
@@ -87,10 +90,10 @@ if (activeMeetingId) {
       {/* HEADER */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div>
-          <h2 className="font-display text-4xl font-bold text-on-surface">
+          <h2 className="text-3xl font-bold text-gray-900 my-6">
             Meetings
           </h2>
-          <p className="text-on-surface-variant mt-1">
+          <p className="mt-1 text-gray-500">
             Create, join and manage video conferences.
           </p>
         </div>
@@ -98,17 +101,19 @@ if (activeMeetingId) {
         <div className="flex items-center gap-3">
           <Button
             variant="outline"
-            className="rounded-xl px-6 py-3"
+            className="flex items-center gap-3 rounded-xl px-5 py-6 font-semibold hover:shadow-md"
             onClick={() => setJoinOpen(true)}
           >
+            <LogIn size={20} />
             Join Meeting
           </Button>
 
           <Button
-            className="rounded-xl px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white"
+            className="flex items-center gap-3 rounded-xl bg-purple-600 px-5 py-6 font-semibold text-white shadow-md"
             onClick={() => setOpen(true)}
           >
-            + New Meeting
+            <Video size={20} />
+            New Meeting
           </Button>
         </div>
       </div>

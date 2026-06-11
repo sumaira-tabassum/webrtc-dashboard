@@ -18,147 +18,184 @@ export default function MeetingRoom({ meetingId, onLeave }: Props) {
   const peerConnectionRef = useRef<RTCPeerConnection | null>(null);
   const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
 
-  // ROOM DETECTION + OFFER CREATION
-  useEffect(() => {
-    // Listen for room updates
-    socket.on("room-users", async (data) => {
-      console.log("ROOM UPDATE:", data);
+const hasJoinedRef = useRef(false);
 
-      // Check if user and admin joined and room is full
-      if (data.users.length === 2 && localStream) {
-        console.log("START WEBRTC NOW");
+const streamRef = useRef<MediaStream | null>(null);
+const pcRef = useRef<RTCPeerConnection | null>(null);
+const callStartedRef = useRef(false);
 
-        // Create WebRTC connection.
-        const pc = createPeerConnection(localStream);
-        // Store iT
-        peerConnectionRef.current = pc;
+/* ===================== DEBUG MOUNT ===================== */
+useEffect(() => {
+  console.log("MOUNT");
 
-        pc.ontrack = (event) => {
-          console.log("REMOTE STREAM RECEIVED:", event.streams[0]);
-          setRemoteStream(event.streams[0]);
-        };
+  return () => {
+    console.log("UNMOUNT");
+  };
+}, []);
 
-        // ICE FIRST (attach to pc)
-        // Chrome finds a possible path, it triggers onicecandidate
-        pc.onicecandidate = (event) => {
-          // event.candidate = packet of network info
-          if (event.candidate) {
-            console.log("ICE GENERATED:", event.candidate);
+/* ===================== SOCKET STATUS DEBUG ===================== */
+useEffect(() => {
+  console.log("SOCKET STATUS:", socket.connected);
+}, []);
 
-            // send packet to server then server forwards to other users
-            socket.emit("ice-candidate", {
-              roomId: meetingId,
-              candidate: event.candidate,
-            });
-          }
-        };
+/* ===================== PEER CONNECTION (SINGLETON) ===================== */
+const getPC = () => {
+  if (!streamRef.current) {
+    console.warn("Camera stream not ready yet");
+    return null;
+  }
 
-        // Create Offer
-        const offer = await pc.createOffer();
+  if (pcRef.current) return pcRef.current;
 
-        //Save my own offer locally
-        await pc.setLocalDescription(offer);
+  const pc = createPeerConnection(streamRef.current);
 
-        //Send offer to other user via server
-        socket.emit("offer", {
-          roomId: meetingId,
-          offer,
-        });
-      }
-    });
+  pc.ontrack = (event) => {
+    console.log("REMOTE STREAM RECEIVED");
+    setRemoteStream(event.streams[0]);
+  };
 
-    return () => {
-      socket.off("room-users");
-    };
-  }, [localStream]);
-
-  // RECEIVE OFFER + CREATE ANSWER
-  useEffect(() => {
-    if (!peerConnectionRef.current) return;
-
-    socket.on("offer", async ({ offer, from }) => {
-      const pc = peerConnectionRef.current;
-      if (!pc) return;
-      console.log("OFFER RECEIVED:", offer);
-
-      // 1. Set admin offer as remote description
-      await pc.setRemoteDescription(new RTCSessionDescription(offer));
-
-      // 2. Create answer
-      const answer = await pc.createAnswer();
-
-      // 3. Set local description
-      await pc.setLocalDescription(answer);
-
-      // 4. Send answer back
-      socket.emit("answer", {
+  pc.onicecandidate = (event) => {
+    if (event.candidate) {
+      socket.emit("ice-candidate", {
         roomId: meetingId,
-        answer,
+        candidate: event.candidate,
       });
-    });
-
-    return () => {
-      socket.off("offer");
-    };
-  }, [meetingId]);
-
-  // ADMIN RECEIVES ANSWER
-  useEffect(() => {
-
-    socket.on("answer", async ({ answer, from }) => {
-      const pc = peerConnectionRef.current;
-      if (!pc) return;
-      console.log("ANSWER RECEIVED:", answer);
-
-      await pc.setRemoteDescription(
-        new RTCSessionDescription(answer)
-      );
-
-      console.log("WEBRTC CONNECTION ESTABLISHED");
-    });
-
-    return () => {
-      socket.off("answer");
-    };
-  }, []);
-
-  useEffect(() => {
-
-    // Other users sends ICE, we recieve it
-    socket.on("ice-candidate", async ({ candidate }) => {
-      const pc = peerConnectionRef.current;
-      if (!pc) return;
-      try {
-
-        console.log("ICE RECEIVED:", candidate);
-
-        await pc.addIceCandidate(
-          new RTCIceCandidate(candidate)
-        );
-      } catch (err) {
-        console.error("ICE error:", err);
-      }
-    });
-
-    return () => {
-      socket.off("ice-candidate");
-    };
-  }, []);
-
-  useEffect(() => {
-    async function startCamera() {
-      // Browser permission for care and microphone access
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: true,
-        audio: true,
-      });
-
-      // Store camera stream
-      setLocalStream(stream);
     }
+  };
 
-    startCamera();
-  }, []);
+  pcRef.current = pc;
+  console.log("PC CREATED ONCE");
+  return pc;
+};
+
+/* ===================== ROOM USERS (ADMIN TRIGGER) ===================== */
+const handler = async (data: any) => {
+  console.log("ROOM UPDATE:", data);
+
+  if (data.users.length !== 2) return;
+
+  if (!isReadyRef.current) {
+    console.log("WAITING FOR CAMERA...");
+    return;
+  }
+
+  if (callStartedRef.current) return;
+  callStartedRef.current = true;
+
+  const pc = getPC();
+  if (!pc) return;
+
+  console.log("STARTING CALL (ADMIN)");
+
+  const offer = await pc.createOffer();
+  await pc.setLocalDescription(offer);
+
+  socket.emit("offer", {
+    roomId: meetingId,
+    offer,
+  });
+};
+
+const isReadyRef = useRef(false);
+
+useEffect(() => {
+  if (localStream) {
+    isReadyRef.current = true;
+    console.log("CAMERA READY");
+  }
+}, [localStream]);
+
+/* ===================== OFFER RECEIVER ===================== */
+useEffect(() => {
+  const handler = async ({ offer }: any) => {
+    console.log("OFFER RECEIVED");
+
+    const pc = getPC();
+    if (!pc) return;
+
+    await pc.setRemoteDescription(new RTCSessionDescription(offer));
+
+    const answer = await pc.createAnswer();
+    await pc.setLocalDescription(answer);
+
+    socket.emit("answer", {
+      roomId: meetingId,
+      answer,
+    });
+  };
+
+  socket.on("offer", handler);
+
+  return () => {
+    socket.off("offer", handler);
+  };
+}, [meetingId]);
+
+/* ===================== ANSWER RECEIVER ===================== */
+useEffect(() => {
+  const handler = async ({ answer }: any) => {
+    const pc = pcRef.current;
+    if (!pc) return;
+
+    console.log("ANSWER RECEIVED");
+
+    await pc.setRemoteDescription(new RTCSessionDescription(answer));
+  };
+
+  socket.on("answer", handler);
+
+  return () => {
+    socket.off("answer", handler);
+  };
+}, []);
+
+/* ===================== ICE CANDIDATES ===================== */
+useEffect(() => {
+  const handler = async ({ candidate }: any) => {
+    const pc = pcRef.current;
+    if (!pc) return;
+
+    try {
+      console.log("ICE RECEIVED");
+      await pc.addIceCandidate(new RTCIceCandidate(candidate));
+    } catch (err) {
+      console.error("ICE ERROR:", err);
+    }
+  };
+
+  socket.on("ice-candidate", handler);
+
+  return () => {
+    socket.off("ice-candidate", handler);
+  };
+}, []);
+
+/* ===================== CAMERA (STRICT MODE SAFE) ===================== */
+useEffect(() => {
+  let cancelled = false;
+
+  async function startCamera() {
+    if (streamRef.current) return;
+
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: true,
+      audio: true,
+    });
+
+    if (cancelled) return;
+
+    streamRef.current = stream;
+    setLocalStream(stream);
+
+    console.log("CAMERA READY");
+  }
+
+  startCamera();
+
+  return () => {
+    cancelled = true;
+  };
+}, []);
 
 
   // Timer
@@ -181,7 +218,7 @@ export default function MeetingRoom({ meetingId, onLeave }: Props) {
       {/* ================= BACKGROUND VIDEO AREA ================= */}
       <div className="absolute inset-0">
         {/* <div className="w-full h-full object-cover"> */}
-          {/* <video
+        {/* <video
             autoPlay
             playsInline
             muted
@@ -191,7 +228,7 @@ export default function MeetingRoom({ meetingId, onLeave }: Props) {
               }
             }}
           /> */}
-          <video
+        <video
           autoPlay
           playsInline
           className="w-full h-full object-cover"

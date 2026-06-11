@@ -158,10 +158,11 @@ const copyToClipboard = async () => {
                 variant="ghost"
                 onClick={() => onOpenChange(false)}
                 className="
-                text-[#464554]
-                hover:bg-[#dae2fd]
-                rounded-xl
-              "
+                            rounded-xl
+                            text-[#464554]
+                            border-[#c7c4d7]
+                            hover:bg-[#dae2fd]
+                        "
               >
                 Cancel
               </Button>
@@ -170,10 +171,8 @@ const copyToClipboard = async () => {
                 className="
                 rounded-xl
                 text-white
-                bg-gradient-to-r
-                from-[#4648d4]
-                to-[#8127cf]
-                hover:shadow-[0_0_20px_rgba(70,72,212,0.4)]
+                bg-purple-600
+                hover:shadow-lg hover:shadow-[#4648d4]/30
               "
                 onClick={() => {
                   const id = meetingId;

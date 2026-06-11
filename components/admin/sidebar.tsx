@@ -11,6 +11,8 @@ import {
 import { useUserRole } from "@/lib/hooks/userRole";
 import { usePathname } from "next/navigation";
 
+import { logout } from "@/lib/auth";
+
 export default function Sidebar() {
   const { role, loading } = useUserRole();
   const pathname = usePathname();
@@ -22,7 +24,7 @@ export default function Sidebar() {
       <div className="flex h-full flex-col p-6">
 
         <div className="mb-10">
-          <h1 className="bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-2xl font-bold text-transparent">
+          <h1 className="bg-purple-600 bg-clip-text text-2xl font-bold text-transparent">
             Dashboard
           </h1>
 
@@ -39,7 +41,7 @@ export default function Sidebar() {
               href="/users"
               className={`flex items-center gap-3 rounded-xl px-4 py-3 transition ${
                 isActive("/users")
-                  ? "bg-gradient-to-r from-pink-600 to-purple-600 text-white font-semibold shadow-md"
+                  ? "bg-purple-600 text-white font-semibold shadow-md"
                   : "text-gray-600 hover:bg-indigo-50 hover:text-indigo-600"
               }`}
             >
@@ -53,7 +55,7 @@ export default function Sidebar() {
             href="/meet"
             className={`flex items-center gap-3 rounded-xl px-4 py-3 transition ${
               isActive("/meet")
-                ? "bg-gradient-to-r from-pink-600 to-purple-600 text-white font-semibold shadow-md"
+                ? "bg-purple-600 text-white font-semibold shadow-md"
                 : "text-gray-600 hover:bg-indigo-50 hover:text-indigo-600"
             }`}
           >
@@ -62,7 +64,7 @@ export default function Sidebar() {
           </Link>
 
           {/* SETTINGS */}
-          <Link
+          {/* <Link
             href="/settings"
             className={`flex items-center gap-3 rounded-xl px-4 py-3 transition ${
               isActive("/settings")
@@ -72,18 +74,19 @@ export default function Sidebar() {
           >
             <Settings size={20} />
             Settings
-          </Link>
+          </Link> */}
 
         </nav>
 
         <div className="space-y-2 border-t border-gray-200 pt-4">
 
-          <button className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-gray-600 transition hover:bg-indigo-50 hover:text-indigo-600">
+          {/* <button className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-gray-600 transition hover:bg-indigo-50 hover:text-indigo-600">
             <HelpCircle size={20} />
             Support
-          </button>
+          </button> */}
 
-          <button className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-red-500 transition hover:bg-red-50">
+          <button className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-red-500 transition hover:bg-red-200"
+          onClick={logout}>
             <LogOut size={20} />
             Sign Out
           </button>

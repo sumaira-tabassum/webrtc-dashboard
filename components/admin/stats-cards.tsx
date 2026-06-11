@@ -2,7 +2,7 @@ export default function StatsCards() {
   return (
     <div className="grid grid-cols-1 gap-6 md:grid-cols-4">
 
-      <div className="rounded-2xl border border-white/30 bg-white/70 p-6 backdrop-blur-xl shadow-sm">
+      <div className="rounded-2xl border border-white/30 bg-white/70 p-6 backdrop-blur-xl shadow-sm hover:shadow-lg hover:shadow-[#4648d4]/30 cursor-pointer">
         <p className="text-sm text-gray-500 uppercase">
           Total Users
         </p>
@@ -12,7 +12,7 @@ export default function StatsCards() {
         </h2>
       </div>
 
-      <div className="rounded-2xl border border-white/30 bg-white/70 p-6 backdrop-blur-xl shadow-sm">
+      <div className="rounded-2xl border border-white/30 bg-white/70 p-6 backdrop-blur-xl shadow-sm hover:shadow-lg hover:shadow-[#4648d4]/30 cursor-pointer">
         <p className="text-sm text-gray-500 uppercase">
           Active Now
         </p>
@@ -22,7 +22,7 @@ export default function StatsCards() {
         </h2>
       </div>
 
-      <div className="rounded-2xl border border-white/30 bg-white/70 p-6 backdrop-blur-xl shadow-sm">
+      <div className="rounded-2xl border border-white/30 bg-white/70 p-6 backdrop-blur-xl shadow-sm hover:shadow-lg hover:shadow-[#4648d4]/30 cursor-pointer">
         <p className="text-sm text-gray-500 uppercase">
           Avg Session
         </p>
@@ -32,7 +32,7 @@ export default function StatsCards() {
         </h2>
       </div>
 
-      <div className="rounded-2xl border border-white/30 bg-white/70 p-6 backdrop-blur-xl shadow-sm">
+      <div className="rounded-2xl border border-white/30 bg-white/70 p-6 backdrop-blur-xl shadow-sm hover:shadow-lg hover:shadow-[#4648d4]/30 cursor-pointer">
         <p className="text-sm text-gray-500 uppercase">
           Storage Used
         </p>

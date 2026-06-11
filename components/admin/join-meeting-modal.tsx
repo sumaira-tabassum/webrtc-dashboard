@@ -19,23 +19,6 @@ type Props = {
   onJoin?: (meetingId: string) => void;
 };
 
-// function formatMeetingId(value: string) {
-//   let val = value.toLowerCase().replace(/[^a-z0-9]/g, "");
-
-//   if (val.length > 3 && val.length <= 6) {
-//     val = val.slice(0, 3) + "-" + val.slice(3);
-//   } else if (val.length > 6) {
-//     val =
-//       val.slice(0, 3) +
-//       "-" +
-//       val.slice(3, 6) +
-//       "-" +
-//       val.slice(6, 9);
-//   }
-
-//   return val;
-// }
-
 export default function JoinMeetingModal({ open, onOpenChange, onJoin }: Props) {
   const [meetingId, setMeetingId] = useState("");
   const [error, setError] = useState(false);
@@ -66,9 +49,12 @@ export default function JoinMeetingModal({ open, onOpenChange, onJoin }: Props) 
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         className="
-          max-w-[520px]
+          fixed left-[50%] top-[50%]
+          z-50
+          w-full max-w-[540px]
+          translate-x-[-50%] translate-y-[-50%]
           p-0
-          overflow-hidden
+          overflow-visible
           rounded-xl
           bg-white/70
           backdrop-blur-xl
@@ -119,7 +105,12 @@ export default function JoinMeetingModal({ open, onOpenChange, onJoin }: Props) 
               type="button"
               variant="ghost"
               onClick={() => onOpenChange(false)}
-              className="text-[#464554]"
+              className="
+                            rounded-xl
+                            text-[#464554]
+                            border-[#c7c4d7]
+                            hover:bg-[#dae2fd]
+                        "
             >
               Cancel
             </Button>
@@ -127,7 +118,7 @@ export default function JoinMeetingModal({ open, onOpenChange, onJoin }: Props) 
             <Button
               type="submit"
               className="
-                bg-gradient-to-r from-[#4648d4] to-[#8127cf]
+                bg-purple-600
                 text-white
                 hover:shadow-lg hover:shadow-[#4648d4]/30
               "
@@ -137,8 +128,6 @@ export default function JoinMeetingModal({ open, onOpenChange, onJoin }: Props) 
           </div>
         </form>
 
-        {/* subtle bottom gradient bar */}
-        <div className="h-1 w-full bg-gradient-to-r from-[#4648d4] to-[#8127cf] opacity-40" />
       </DialogContent>
     </Dialog>
   );

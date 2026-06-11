@@ -266,9 +266,7 @@ export default function CreateUserModal({ open, onOpenChange }: Props) {
                             className={`
                             rounded-xl
                             text-white
-                            bg-gradient-to-r
-                            from-[#4648d4]
-                            to-[#8127cf]
+                            bg-purple-600
                             hover:shadow-[0_0_20px_rgba(70,72,212,0.4)]
                             transition-all
                             ${loading ? "opacity-50 cursor-not-allowed" : ""}
