@@ -34,27 +34,25 @@ export default function MeetPage() {
   const [open, setOpen] = useState(false);
   const [joinOpen, setJoinOpen] = useState(false);
 
-  //controls whether we are inside meeting or dashboard
   const [activeMeetingId, setActiveMeetingId] = useState<string | null>(null);
-
-  const [participants, setParticipants] = useState<any[]>([]);
-
+  const [isInitiator, setIsInitiator] = useState(false);
 
 const startMeeting = (id: string) => {
   socket.emit("create-room", id);
+  setIsInitiator(true);
   setActiveMeetingId(id);
   setOpen(false);
 };
 
 const joinMeeting = (id: string) => {
-  console.log("JOIN CLICKED:", id);
-  socket.emit("join-room", id, (res: any) => {
+  socket.emit("join-room", id, (res: { ok: boolean; error?: string }) => {
     if (!res.ok) {
       alert(res.error);
       return;
     }
 
-     setActiveMeetingId(id); // ONLY after approval
+    setIsInitiator(false);
+    setActiveMeetingId(id);
     setJoinOpen(false);
   });
 };
@@ -70,15 +68,12 @@ useEffect(() => {
   };
 }, []);
 
-  const leaveMeeting = () => {
-    setActiveMeetingId(null);
-  };
-
 if (activeMeetingId) {
   return (
     <div className="mt-6 h-screen w-full flex flex-col items-center justify-center bg-black text-white">
     <MeetingRoom
       meetingId={activeMeetingId}
+      isInitiator={isInitiator}
       onLeave={() => setActiveMeetingId(null)}
     />
     </div>

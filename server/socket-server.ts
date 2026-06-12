@@ -1,58 +1,70 @@
 import { Server } from "socket.io";
 
 const io = new Server(3001, {
-    cors: { origin: "http://localhost:3000" },
+    cors: { origin: [
+        "http://localhost:3000",
+        "http://192.168.1.8:3000",
+    ]
+     },
 });
 
-// roomId → Set of socketIds
 const rooms = new Map<string, Set<string>>();
 
-// Connection. Runs whenever a browser connects.
 io.on("connection", (socket) => {
-    // Every browser gets unique id.
     console.log("connected:", socket.id);
 
-    // Admin creates meeting.
     socket.on("create-room", (roomId: string) => {
-        // Create room and store admin.
         rooms.set(roomId, new Set([socket.id]));
-        // Put admin inside Socket.io room.
-        socket.join(roomId);
+        socket.join(roomId);    //Adds socket to Socket.IO room.
 
+        // Send event only to this socket.
         socket.emit("role-assigned", { role: "admin" });
         
         console.log("ROOM CREATED:", roomId);
     });
 
-    // User joins room/meeting.
     socket.on("join-room", (roomId, callback) => {
-        // Check room exists.
         const room = rooms.get(roomId);
 
-        // If room doesn't exist
         if (!room) {
+            // Sends error back to joining user.
             socket.emit("room-error", "Room does not exist");
             return;
         }
 
-        // If room full is full
         if (room.size >= 2) {
             socket.emit("room-error", "Room is full");
             return;
         }
 
-        // Add second user
         room.add(socket.id);
         // Put second user into same Socket.io room.
         socket.join(roomId);
 
-        // Tell frontend: Join succeeded
         callback({ ok: true });
 
         console.log("USER JOINED:", roomId, socket.id);
 
-        // Notify everyone in room
-        io.to(roomId).emit("room-users", {
+        // creates object
+        const payload = {
+            roomId,
+            // Array.from(room): converts set into array
+            users: Array.from(room).map((id) => ({
+                socketId: id,
+                role: id === socket.id ? "you" : "peer",
+            })),
+        };
+
+        // io.to(roomId).emit(...): everyone in room
+        io.to(roomId).emit("room-users", payload);
+    });
+
+    // Added to fix timing issues.
+    socket.on("get-room-users", (roomId: string) => {
+        const room = rooms.get(roomId);
+        if (!room?.has(socket.id)) return;
+
+        socket.emit("room-users", {
             roomId,
             users: Array.from(room).map((id) => ({
                 socketId: id,
@@ -62,15 +74,10 @@ io.on("connection", (socket) => {
     });
 
     // OFFER handler
-
-    // Server recieves roomId, offer (webRTC data)
     socket.on("offer", ({ roomId, offer }) => {
-        // Find the room in memory
         const room = rooms.get(roomId);
-
         if (!room || !room.has(socket.id)) return;
 
-        // Send this offer to everyone ELSE in the room except sender
         socket.to(roomId).emit("offer", {
             offer,
             from: socket.id,
@@ -86,6 +93,18 @@ io.on("connection", (socket) => {
             answer,
             from: socket.id,
         });
+    });
+
+    socket.on("leave-room", (roomId: string) => {
+        const room = rooms.get(roomId);
+        if (!room?.has(socket.id)) return;
+
+        room.delete(socket.id);
+        socket.leave(roomId);
+
+        if (room.size === 0) {
+            rooms.delete(roomId);
+        }
     });
 
     // ICE CANDIDATE handler
