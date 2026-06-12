@@ -302,7 +302,7 @@ export default function MeetingRoom({ meetingId, isInitiator, signaling, onLeave
   const secs = seconds % 60;
 
   return (
-    <div className="relative w-full h-screen bg-[#0c0d12] overflow-hidden text-white">
+    <div className="relative w-full min-h-[calc(100dvh-5rem)] bg-[#0c0d12] overflow-hidden text-white">
       <div className="absolute inset-0">
         <video
           ref={remoteVideoRef}
@@ -312,11 +312,13 @@ export default function MeetingRoom({ meetingId, isInitiator, signaling, onLeave
         />
       </div>
 
-      <header className="flex absolute top-0 left-0 w-full z-50 flex justify-between items-center px-6 py-3 bg-white/10 backdrop-blur-md border-b border-white/10">
+      <header className="absolute top-0 left-0 z-50 flex w-full flex-col gap-3 border-b border-white/10 bg-white/10 px-4 py-3 backdrop-blur-md sm:flex-row sm:items-center sm:justify-between sm:px-6">
         <div className="flex items-center gap-2 text-xs text-white/60">
 
           <span className="text-white/70 text-sm font-medium">
-            ID: <span className="font-mono text-white/70">{meetingId}</span>
+            ID: <span className="font-mono text-white/70 break-all">
+  {meetingId}
+</span>
           </span>
 
           <button
@@ -351,7 +353,24 @@ export default function MeetingRoom({ meetingId, isInitiator, signaling, onLeave
         </div>
       </header>
 
-      <div className="absolute top-24 right-6 w-48 h-32 rounded-xl overflow-hidden border border-white/10 backdrop-blur-md bg-white/10">
+      <div
+  className="
+    absolute
+    right-3
+    top-24
+    h-24
+    w-32
+    sm:right-6
+    sm:h-32
+    sm:w-48
+    rounded-xl
+    overflow-hidden
+    border
+    border-white/10
+    backdrop-blur-md
+    bg-white/10
+  "
+>
         <video
           ref={localVideoRef}
           autoPlay
@@ -364,32 +383,60 @@ export default function MeetingRoom({ meetingId, isInitiator, signaling, onLeave
         </div>
       </div>
 
-      <nav className="absolute bottom-8 left-1/2 -translate-x-1/2 z-50 flex items-center gap-6 px-6 py-3 rounded-full backdrop-blur-xl bg-white/10 border border-white/10 shadow-2xl">
+      <nav
+  className="
+    absolute
+    bottom-4
+    left-1/2
+    z-50
+    flex
+    -translate-x-1/2
+    items-center
+    gap-3
+    rounded-full
+    border
+    border-white/10
+    bg-white/10
+    px-3
+    py-2
+    backdrop-blur-xl
+    shadow-2xl
+
+    sm:bottom-8
+    sm:gap-6
+    sm:px-6
+    sm:py-3
+  "
+>
 
         {/* AUDIO */}
         <button onClick={toggleAudio} className="group flex flex-col items-center gap-1">
           <div
-            className={`w-12 h-12 rounded-full flex items-center justify-center transition-all duration-200 group-active:scale-95 ${isAudioMuted
+            className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center transition-all duration-200 group-active:scale-95 ${isAudioMuted
               ? "bg-red-500 text-white"
               : "bg-white/10 text-white hover:bg-white/20"
               }`}
           >
             {isAudioMuted ? <MicOff size={20} /> : <Mic size={20} />}
           </div>
-          <span className="text-[10px] text-white/60">Mute</span>
+          <span className="hidden text-[10px] text-white/60 sm:block">
+  Mute
+</span>
         </button>
 
         {/* VIDEO */}
         <button onClick={toggleVideo} className="group flex flex-col items-center gap-1">
           <div
-            className={`w-12 h-12 rounded-full flex items-center justify-center transition-all duration-200 group-active:scale-95 ${isVideoMuted
+            className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center transition-all duration-200 group-active:scale-95 ${isVideoMuted
               ? "bg-red-500 text-white"
               : "bg-white/10 text-white hover:bg-white/20"
               }`}
           >
             {isVideoMuted ? <VideoOff size={20} /> : <Video size={20} />}
           </div>
-          <span className="text-[10px] text-white/60">Video</span>
+         <span className="hidden text-[10px] text-white/60 sm:block">
+ Video
+</span>
         </button>
 
         {/* SCREEN SHARE
@@ -413,10 +460,12 @@ export default function MeetingRoom({ meetingId, isInitiator, signaling, onLeave
 
         {/* END CALL */}
         <button onClick={handleLeave} className="group flex flex-col items-center gap-1">
-          <div className="w-12 h-12 rounded-full flex items-center justify-center bg-red-600 text-white hover:bg-red-700 transition-all duration-200 group-active:scale-95">
+          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center bg-red-600 text-white hover:bg-red-700 transition-all duration-200 group-active:scale-95">
             <PhoneOff size={20} />
           </div>
-          <span className="text-[10px] text-white/60">End</span>
+         <span className="hidden text-[10px] text-white/60 sm:block">
+  End
+</span>
         </button>
 
       </nav>

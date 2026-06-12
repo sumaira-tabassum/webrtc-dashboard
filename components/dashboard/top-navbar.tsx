@@ -2,9 +2,17 @@
 
 import { supabaseClient } from "@/lib/supabase/client";
 import { useEffect, useState } from "react";
-import { Bell, Moon, Search } from "lucide-react";
+import { Bell, Moon, Search, Menu } from "lucide-react";
+import { Button } from "../ui/button";
 
-export default function TopNavbar() {
+interface TopNavbarProps {
+  onMenuClick: () => void;
+}
+
+export default function TopNavbar({
+  onMenuClick,
+}: TopNavbarProps) {
+
   const [user, setUser] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
 
@@ -39,11 +47,20 @@ export default function TopNavbar() {
   };
 
   return (
-    <header className="fixed left-64 right-0 top-0 z-30 h-20 border-b border-white/30 bg-white/70 px-8 backdrop-blur-xl">
+    <header className="fixed top-0 right-0 left-0 lg:left-64 z-30 h-20 border-b border-white/30 bg-white/70 backdrop-blur-xl">
 
-      <div className="flex h-full items-center justify-between">
+      <div className="flex h-full items-center justify-between px-4 sm:px-6 lg:px-8">
 
-        <div className="relative w-full max-w-md">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="lg:hidden"
+          onClick={onMenuClick}
+        >
+          <Menu className="h-5 w-5" />
+        </Button>
+
+        <div className="hidden md:block relative w-full max-w-md">
           <Search
             size={18}
             className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
@@ -56,7 +73,7 @@ export default function TopNavbar() {
           />
         </div>
 
-        <div className="flex items-center gap-6">
+        <div className="flex items-center gap-3 sm:gap-5">
 
           <button className="relative">
             <Bell className="text-gray-600" />
@@ -71,7 +88,7 @@ export default function TopNavbar() {
           <div className="flex items-center gap-3">
 
             {/* USER INFO */}
-            <div className="flex flex-col text-right leading-tight">
+            <div className="hidden sm:flex flex-col text-right leading-tight">
 
               {/* NAME */}
               <p
@@ -88,7 +105,7 @@ export default function TopNavbar() {
             </div>
 
             {/* AVATAR */}
-            <div className="w-10 h-10 rounded-full bg-purple-600 flex items-center justify-center text-white font-semibold uppercase">
+           <div className="flex-shrink-0 w-10 h-10 rounded-full bg-purple-600 flex items-center justify-center text-white font-semibold uppercase">
               {profile?.full_name?.charAt(0) || "U"}
             </div>
 

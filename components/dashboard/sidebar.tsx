@@ -13,14 +13,44 @@ import { usePathname } from "next/navigation";
 
 import { logout } from "@/lib/auth";
 
-export default function Sidebar() {
+export default function Sidebar({
+  isOpen,
+  onClose,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+}) {
   const { role, loading } = useUserRole();
   const pathname = usePathname();
 
   const isActive = (path: string) => pathname === path;
 
   return (
-    <aside className="fixed left-0 top-0 h-screen w-64 border-r border-white/30 bg-white/70 backdrop-blur-xl shadow-xl">
+    <>
+  {/* Mobile Overlay */}
+  {isOpen && (
+    <div
+      className="fixed inset-0 z-40 bg-black/40 lg:hidden"
+      onClick={onClose}
+    />
+  )}
+
+  <aside
+    className={`
+      fixed left-0 top-0 z-50 h-screen w-64
+      border-r border-white/30
+      bg-white/70 backdrop-blur-xl shadow-xl
+      transition-transform duration-300
+
+      ${
+        isOpen
+          ? "translate-x-0"
+          : "-translate-x-full"
+      }
+
+      lg:translate-x-0
+    `}
+  >
       <div className="flex h-full flex-col p-6">
 
         <div className="mb-10">
@@ -95,5 +125,6 @@ export default function Sidebar() {
 
       </div>
     </aside>
+    </>
   );
 }

@@ -3,9 +3,9 @@
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 
-import CreateMeetingModal from "@/components/admin/create-meeting-modal";
-import JoinMeetingModal from "@/components/admin/join-meeting-modal";
-import MeetingRoom from "@/components/admin/meeting-room";
+import CreateMeetingModal from "@/components/dashboard/create-meeting-modal";
+import JoinMeetingModal from "@/components/dashboard/join-meeting-modal";
+import MeetingRoom from "@/components/dashboard/meeting-room";
 
 import { Video, LogIn } from "lucide-react";
 
@@ -70,7 +70,7 @@ export default function MeetPage() {
 
   if (activeMeetingId && signalingRef.current) {
     return (
-      <div className="mt-6 h-screen w-full flex flex-col items-center justify-center bg-black text-white">
+  <div className="w-full min-h-[calc(100dvh-5rem)] flex flex-col bg-black text-white">
         <MeetingRoom
           meetingId={activeMeetingId}
           isInitiator={isInitiator}
@@ -82,19 +82,20 @@ export default function MeetPage() {
   }
 
   return (
-    <div className="pt-6 px-xl pb-xl space-y-10">
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+    <div className="space-y-8 px-0 py-4 sm:space-y-10">
+      {/* <div className="space-y-8"></div> */}
+      <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
         <div>
-          <h2 className="text-3xl font-bold text-gray-900 my-6">Meetings</h2>
+          <h2 className="text-2xl font-bold text-gray-900 sm:text-3xl">Meetings</h2>
           <p className="mt-1 text-gray-500">
             Create, join and manage video conferences.
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
           <Button
-            variant="outline"
-            className="flex items-center gap-3 rounded-xl px-5 py-6 font-semibold hover:shadow-md"
+  variant="outline"
+  className="w-full sm:w-auto flex items-center justify-center gap-2 rounded-xl px-4 py-5 font-semibold"
             onClick={() => setJoinOpen(true)}
             disabled={joining}
           >
@@ -103,7 +104,7 @@ export default function MeetPage() {
           </Button>
 
           <Button
-            className="flex items-center gap-3 rounded-xl bg-purple-600 px-5 py-6 font-semibold text-white shadow-md"
+  className="w-full sm:w-auto flex items-center justify-center gap-2 rounded-xl bg-purple-600 px-4 py-5 font-semibold text-white shadow-md"
             onClick={() => setOpen(true)}
           >
             <Video size={20} />
