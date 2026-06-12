@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --experimental-https",
+    "dev": "next dev",
     "socket": "ts-node server/socket-server.ts"
   },
   "dependencies": {
