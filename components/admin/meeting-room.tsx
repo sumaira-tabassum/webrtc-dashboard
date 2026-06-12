@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { socket } from "@/lib/socket";
+import { MeetingSignaling } from "@/lib/signaling";
 import { createPeerConnection } from "@/lib/webrtc";
 
 import {
@@ -19,11 +19,12 @@ import {
 
 type Props = {
   meetingId: string;
-  isInitiator: boolean;        //true = admin creates offer, false = joiner answers
+  isInitiator: boolean;
+  signaling: MeetingSignaling;
   onLeave: () => void;
 };
 
-export default function MeetingRoom({ meetingId, isInitiator, onLeave }: Props) {
+export default function MeetingRoom({ meetingId, isInitiator, signaling, onLeave }: Props) {
   const [seconds, setSeconds] = useState(0);
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
   const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
@@ -90,11 +91,7 @@ export default function MeetingRoom({ meetingId, isInitiator, onLeave }: Props) 
       // runs when browser finds network path
       pc.onicecandidate = (event) => {
         if (event.candidate) {
-          // sends candidate to backend
-          socket.emit("ice-candidate", {
-            roomId: meetingId,
-            candidate: event.candidate,
-          });
+          signaling.sendIceCandidate(event.candidate);
         }
       };
 
@@ -116,7 +113,7 @@ export default function MeetingRoom({ meetingId, isInitiator, onLeave }: Props) 
       const offer = await pc.createOffer();
       await pc.setLocalDescription(offer);
 
-      socket.emit("offer", { roomId: meetingId, offer });
+      signaling.sendOffer(offer);
     };
 
     // runs on joiner when admin sends offer
@@ -141,7 +138,7 @@ export default function MeetingRoom({ meetingId, isInitiator, onLeave }: Props) 
       await pc.setLocalDescription(answer);
 
       // send answer back
-      socket.emit("answer", { roomId: meetingId, answer });
+      signaling.sendAnswer(answer);
     };
 
     // runs on admin when joiner replies
@@ -172,13 +169,10 @@ export default function MeetingRoom({ meetingId, isInitiator, onLeave }: Props) 
       }
     };
 
-    // triggered from backend
-    const handleRoomUsers = (data: { users: unknown[] }) => {
-      if (data.users.length !== 2) return;
+    const handleRoomUsers = (count: number) => {
+      if (count !== 2) return;
 
-      // If 2 users present
       peerReadyRef.current = true;
-      // try call
       void startCall();
     };
 
@@ -225,34 +219,22 @@ export default function MeetingRoom({ meetingId, isInitiator, onLeave }: Props) 
       }
     }
 
-    // SOCKET EVENTS REGISTRATION
-    socket.on("room-users", handleRoomUsers);
-    socket.on("offer", handleOffer);
-    socket.on("answer", handleAnswer);
-    socket.on("ice-candidate", handleIce);
+    signaling.setHandlers({
+      onOffer: handleOffer,
+      onAnswer: handleAnswer,
+      onIce: handleIce,
+      onRoomUsers: handleRoomUsers,
+    });
 
-    // start camera immediately when component loads
     void startCamera();
-    // checks who is already in room (through server)
-    socket.emit("get-room-users", meetingId);
+    signaling.syncRoomUsers();
 
     // cleanup func, runs when: leaving room / component unmounts / route changes
     return () => {
-      // stops async camera updates
       cancelled = true;
 
-      // removes event listeners
-      socket.off("room-users", handleRoomUsers);
-      socket.off("offer", handleOffer);
-      socket.off("answer", handleAnswer);
-      socket.off("ice-candidate", handleIce);
+      signaling.setHandlers({});
 
-      // only sends if user clicked leave button
-      if (leavingRef.current) {
-        socket.emit("leave-room", meetingId);
-      }
-
-      // stop camera tracks: turns off camera/mic
       streamRef.current?.getTracks().forEach((t) => t.stop());
       streamRef.current = null;
 
@@ -267,7 +249,7 @@ export default function MeetingRoom({ meetingId, isInitiator, onLeave }: Props) 
       pendingOfferRef.current = null;
       iceQueueRef.current = [];
     };
-  }, [meetingId, isInitiator]);
+  }, [meetingId, isInitiator, signaling]);
 
   // sets flag so cleanup knows user intentionally left
   const handleLeave = () => {

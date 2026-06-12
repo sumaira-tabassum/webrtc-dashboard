@@ -1,7 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 
 import CreateMeetingModal from "@/components/admin/create-meeting-modal";
@@ -10,84 +9,83 @@ import MeetingRoom from "@/components/admin/meeting-room";
 
 import { Video, LogIn } from "lucide-react";
 
-import { socket } from "@/lib/socket";
+import { MeetingSignaling } from "@/lib/signaling";
 
 export default function MeetPage() {
-
-  useEffect(() => {
-  console.log("PAGE LOADED");
-
-  socket.on("connect", () => {
-    console.log("SOCKET CONNECTED:", socket.id);
-  });
-
-  socket.on("room-users", (data) => {
-    console.log("ROOM EVENT IN PAGE:", data);
-  });
-
-  return () => {
-    socket.off("connect");
-    socket.off("room-users");
-  };
-}, []);
-
   const [open, setOpen] = useState(false);
   const [joinOpen, setJoinOpen] = useState(false);
-
   const [activeMeetingId, setActiveMeetingId] = useState<string | null>(null);
   const [isInitiator, setIsInitiator] = useState(false);
+  const [joining, setJoining] = useState(false);
+  const signalingRef = useRef<MeetingSignaling | null>(null);
 
-const startMeeting = (id: string) => {
-  socket.emit("create-room", id);
-  setIsInitiator(true);
-  setActiveMeetingId(id);
-  setOpen(false);
-};
-
-const joinMeeting = (id: string) => {
-  socket.emit("join-room", id, (res: { ok: boolean; error?: string }) => {
-    if (!res.ok) {
-      alert(res.error);
-      return;
+  const startMeeting = async (id: string) => {
+    try {
+      const signaling = new MeetingSignaling();
+      await signaling.createRoom(id);
+      signalingRef.current = signaling;
+      setIsInitiator(true);
+      setActiveMeetingId(id);
+      setOpen(false);
+    } catch (err) {
+      console.error("Failed to create room:", err);
+      alert("Failed to start meeting. Please try again.");
     }
-
-    setIsInitiator(false);
-    setActiveMeetingId(id);
-    setJoinOpen(false);
-  });
-};
-
-useEffect(() => {
-  socket.on("room-error", (msg) => {
-    alert(msg);
-    setActiveMeetingId(null);
-  });
-
-  return () => {
-    socket.off("room-error");
   };
-}, []);
 
-if (activeMeetingId) {
-  return (
-    <div className="mt-6 h-screen w-full flex flex-col items-center justify-center bg-black text-white">
-    <MeetingRoom
-      meetingId={activeMeetingId}
-      isInitiator={isInitiator}
-      onLeave={() => setActiveMeetingId(null)}
-    />
-    </div>
-  );
-}
+  const joinMeeting = async (id: string) => {
+    setJoining(true);
+    try {
+      const signaling = new MeetingSignaling();
+      const res = await signaling.joinRoom(id);
+
+      if (!res.ok) {
+        alert(res.error ?? "Could not join meeting");
+        return;
+      }
+
+      signalingRef.current = signaling;
+      setIsInitiator(false);
+      setActiveMeetingId(id);
+      setJoinOpen(false);
+    } catch (err) {
+      console.error("Failed to join room:", err);
+      alert("Failed to join meeting. Please try again.");
+    } finally {
+      setJoining(false);
+    }
+  };
+
+  const handleLeave = () => {
+    void signalingRef.current?.leave();
+    signalingRef.current = null;
+    setActiveMeetingId(null);
+  };
+
+  useEffect(() => {
+    return () => {
+      void signalingRef.current?.leave();
+    };
+  }, []);
+
+  if (activeMeetingId && signalingRef.current) {
+    return (
+      <div className="mt-6 h-screen w-full flex flex-col items-center justify-center bg-black text-white">
+        <MeetingRoom
+          meetingId={activeMeetingId}
+          isInitiator={isInitiator}
+          signaling={signalingRef.current}
+          onLeave={handleLeave}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="pt-6 px-xl pb-xl space-y-10">
-      {/* HEADER */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div>
-          <h2 className="text-3xl font-bold text-gray-900 my-6">
-            Meetings
-          </h2>
+          <h2 className="text-3xl font-bold text-gray-900 my-6">Meetings</h2>
           <p className="mt-1 text-gray-500">
             Create, join and manage video conferences.
           </p>
@@ -98,6 +96,7 @@ if (activeMeetingId) {
             variant="outline"
             className="flex items-center gap-3 rounded-xl px-5 py-6 font-semibold hover:shadow-md"
             onClick={() => setJoinOpen(true)}
+            disabled={joining}
           >
             <LogIn size={20} />
             Join Meeting
@@ -113,20 +112,15 @@ if (activeMeetingId) {
         </div>
       </div>
 
-      {/* MODALS */}
       <CreateMeetingModal
         open={open}
-        onOpenChange={(val) => {
-          setOpen(val);
-        }}
+        onOpenChange={setOpen}
         onStartMeeting={startMeeting}
       />
 
       <JoinMeetingModal
         open={joinOpen}
-        onOpenChange={(val) => {
-          setJoinOpen(val);
-        }}
+        onOpenChange={setJoinOpen}
         onJoin={joinMeeting}
       />
     </div>
