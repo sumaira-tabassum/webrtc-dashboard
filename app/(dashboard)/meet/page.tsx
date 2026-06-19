@@ -11,6 +11,8 @@ import { Video, LogIn } from "lucide-react";
 
 import { MeetingSignaling } from "@/lib/signaling";
 
+import { useRouter, useSearchParams } from "next/navigation";
+
 export default function MeetPage() {
   const [open, setOpen] = useState(false);
   const [joinOpen, setJoinOpen] = useState(false);
@@ -18,6 +20,20 @@ export default function MeetPage() {
   const [isInitiator, setIsInitiator] = useState(false);
   const [joining, setJoining] = useState(false);
   const signalingRef = useRef<MeetingSignaling | null>(null);
+
+  const router = useRouter();
+const searchParams = useSearchParams();
+
+useEffect(() => {
+  const joinId = searchParams.get("join");
+
+  if (joinId) {
+    joinMeeting(joinId);
+
+    // clean URL after joining
+    router.replace("/meet");
+  }
+}, [searchParams]);
 
   const startMeeting = async (id: string) => {
     try {
@@ -73,7 +89,7 @@ export default function MeetPage() {
   <div className="w-full min-h-[calc(100dvh-5rem)] flex flex-col bg-black text-white">
         <MeetingRoom
           meetingId={activeMeetingId}
-          isInitiator={isInitiator}
+          // isInitiator={isInitiator}
           signaling={signalingRef.current}
           onLeave={handleLeave}
         />
@@ -104,7 +120,7 @@ export default function MeetPage() {
           </Button>
 
           <Button
-  className="w-full sm:w-auto flex items-center justify-center gap-2 rounded-xl bg-purple-600 px-4 py-5 font-semibold text-white shadow-md"
+  className="w-full sm:w-auto flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-5 font-semibold text-white shadow-md"
             onClick={() => setOpen(true)}
           >
             <Video size={20} />

@@ -4,6 +4,9 @@ import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { MeetingSignaling } from "@/lib/signaling";
 import { createPeerConnection } from "@/lib/webrtc";
+import RemoteVideo from "@/components/remote-video";
+import { useContext } from "react";
+import { MeetingContext } from "@/app/(dashboard)/layout";
 
 import {
   Mic,
@@ -14,35 +17,70 @@ import {
   Users,
   PhoneOff,
   Copy,
-  Check
+  Check,
 } from "lucide-react";
 
 type Props = {
   meetingId: string;
-  isInitiator: boolean;
+  // isInitiator: boolean;
   signaling: MeetingSignaling;
   onLeave: () => void;
 };
 
-export default function MeetingRoom({ meetingId, isInitiator, signaling, onLeave }: Props) {
+type PendingOffer = {
+  offer: RTCSessionDescriptionInit;
+  from: string;
+  to: string;
+};
+
+export default function MeetingRoom({ meetingId, signaling, onLeave }: Props) {
+
+  const { setInMeeting } = useContext(MeetingContext);
+  
   const [seconds, setSeconds] = useState(0);
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
-  const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
+  // const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
   const [isAudioMuted, setIsAudioMuted] = useState(false);
   const [isVideoMuted, setIsVideoMuted] = useState(false);
   const [copied, setCopied] = useState(false);
 
   const localVideoRef = useRef<HTMLVideoElement>(null);
-  const remoteVideoRef = useRef<HTMLVideoElement>(null);
+  // const remoteVideoRef = useRef<HTMLVideoElement>(null);
 
   const streamRef = useRef<MediaStream | null>(null);
-  const pcRef = useRef<RTCPeerConnection | null>(null);
+
+  const participantsRef = useRef<string[]>([]);
+  // const pcRef = useRef<RTCPeerConnection | null>(null);
+  const peersRef = useRef<
+    Map<string, RTCPeerConnection>
+  >(new Map());
+
+  const remoteStreamsRef = useRef<
+    Map<string, MediaStream>
+  >(new Map());
+
+  const [remoteStreams, setRemoteStreams] = useState<
+    Map<string, MediaStream>
+  >(new Map());
+
+  const negotiationLockRef = useRef<Set<string>>(new Set());
+
   const isReadyRef = useRef(false);
-  const callStartedRef = useRef(false);
-  const peerReadyRef = useRef(false);
-  const pendingOfferRef = useRef<RTCSessionDescriptionInit | null>(null);
-  const iceQueueRef = useRef<RTCIceCandidateInit[]>([]);
-  const leavingRef = useRef(false);
+  // const callStartedRef = useRef(false);
+  // const peerReadyRef = useRef(false);
+  // const pendingOfferRef = useRef<RTCSessionDescriptionInit | null>(null);
+  const pendingOfferRef = useRef<PendingOffer[]>([])
+  // const iceQueueRef = useRef<RTCIceCandidateInit[]>([]);
+  const iceQueueRef = useRef<Map<string, RTCIceCandidateInit[]>>(new Map());
+  // const leavingRef = useRef(false);
+
+     useEffect(() => {
+      setInMeeting(true);
+  
+      return () => {
+        setInMeeting(false);
+      };
+    }, [setInMeeting]);
 
   useEffect(() => {
     if (localVideoRef.current && localStream) {
@@ -52,141 +90,186 @@ export default function MeetingRoom({ meetingId, isInitiator, signaling, onLeave
   }, [localStream]);
 
   useEffect(() => {
-    if (remoteVideoRef.current && remoteStream) {
-      remoteVideoRef.current.srcObject = remoteStream;
-    }
-  }, [remoteStream]);
-
-  useEffect(() => {
     // If component unmounts: prevents async camera crash
     let cancelled = false;
 
     // process stored network data (ICE candidates)
-    const flushIceQueue = async () => {
-      const pc = pcRef.current;
+    const flushIceQueue = async (peerId: string) => {
+      const pc = peersRef.current.get(peerId);
       if (!pc?.remoteDescription) return;
 
-      while (iceQueueRef.current.length > 0) {
-        const candidate = iceQueueRef.current.shift()!;
+      const queue = iceQueueRef.current.get(peerId) || [];
+
+      while (queue.length > 0) {
+        const candidate = queue.shift()!;
         await pc.addIceCandidate(new RTCIceCandidate(candidate));
+      }
+
+      iceQueueRef.current.set(peerId, queue);
+    };
+
+    const canNegotiate = (peerId: string) => {
+      const key = [signaling.odId, peerId].sort().join("-");
+      return !negotiationLockRef.current.has(key);
+    };
+
+    const markNegotiated = (peerId: string) => {
+      const key = [signaling.odId, peerId].sort().join("-");
+      negotiationLockRef.current.add(key);
+    };
+
+    const handleParticipants = (participants: string[]) => {
+      // remove self from list
+      const others = participants.filter(
+        (id) => id !== signaling.odId
+      );
+
+      participantsRef.current = others;
+
+      for (const peerId of others) {
+        if (peersRef.current.has(peerId)) continue;
+        createOrGetPeer(peerId);
       }
     };
 
-    // connection creator
-    const getPC = () => {
-      if (!streamRef.current) return null;
-      if (pcRef.current) return pcRef.current;
-
-      const pc = createPeerConnection(streamRef.current);
-
-      // triggers when remote video arrives
-      pc.ontrack = (event) => {
-        const stream =
-          // actual remote MediaStream
-          event.streams[0] ?? new MediaStream([event.track]);
-        // saves peer video for UI
-        setRemoteStream(stream);
-      };
-
-      // runs when browser finds network path
-      pc.onicecandidate = (event) => {
-        if (event.candidate) {
-          signaling.sendIceCandidate(event.candidate);
-        }
-      };
-
-      pcRef.current = pc;
-      return pc;
+    const shouldInitiate = (peerId: string) => {
+      return signaling.odId < peerId;
     };
 
-    // only for initiator (admin)
-    const startCall = async () => {
-      // conditions: must be initiator, camera ready, peer joined, not already started
-      if (!isInitiator || callStartedRef.current || !isReadyRef.current) return;
-      if (!peerReadyRef.current) return;
+    const initiateOffer = async (peerId: string) => {
+      if (!canNegotiate(peerId)) return;
+      markNegotiated(peerId);
 
-      const pc = getPC();
+      const pc = peersRef.current.get(peerId);
       if (!pc) return;
 
-      // then: create offer (I want to connect video call), set local description, send to server
-      callStartedRef.current = true;
       const offer = await pc.createOffer();
       await pc.setLocalDescription(offer);
 
-      signaling.sendOffer(offer);
+      signaling.sendOffer(peerId, offer);
+    };
+
+    const createOrGetPeer = (peerId: string) => {
+      const existing = peersRef.current.get(peerId);
+      if (existing) return existing;
+
+      const stream = streamRef.current;
+
+      if (!stream) {
+        console.warn(
+          "Skipping peer creation because local stream is not ready"
+        );
+        return null;
+      }
+
+      const pc = createPeerConnection(stream);
+
+      pc.ontrack = (event) => {
+        const stream =
+          event.streams[0] ?? new MediaStream([event.track]);
+
+        remoteStreamsRef.current.set(peerId, stream);
+        setRemoteStreams(new Map(remoteStreamsRef.current));
+      };
+
+      pc.onicecandidate = (event) => {
+        if (event.candidate) {
+          signaling.sendIceCandidate(peerId, event.candidate);
+        }
+      };
+
+      peersRef.current.set(peerId, pc);
+
+
+      if (shouldInitiate(peerId)) {
+        initiateOffer(peerId);
+      }
+
+      return pc;
     };
 
     // runs on joiner when admin sends offer
-    const handleOffer = async ({ offer }: { offer: RTCSessionDescriptionInit }) => {
-      if (isInitiator) return;   //ignore if initiator
+    const handleOffer = async (data: {
+      offer: RTCSessionDescriptionInit;
+      from: string;
+      to: string;
+    }) => {
 
       // if camera not ready, store offer (pendingOfferRef)
       if (!isReadyRef.current) {
-        pendingOfferRef.current = offer;
+        pendingOfferRef.current.push(data);
         return;
       }
 
-      const pc = getPC();
+      const fromPeerId = data.from;
+
+      if (!canNegotiate(fromPeerId)) return;
+      markNegotiated(fromPeerId);
+
+      const pc = createOrGetPeer(fromPeerId);
       if (!pc) return;
 
       // ELSE: set remote description (admin offer)
-      await pc.setRemoteDescription(new RTCSessionDescription(offer));
-      await flushIceQueue();
+      await pc.setRemoteDescription(
+        new RTCSessionDescription(data.offer)
+      );
+      await flushIceQueue(fromPeerId);
 
       // create answer
       const answer = await pc.createAnswer();
       await pc.setLocalDescription(answer);
 
       // send answer back
-      signaling.sendAnswer(answer);
+      signaling.sendAnswer(fromPeerId, answer);
+      // signaling.sendAnswer(answer);
     };
 
     // runs on admin when joiner replies
-    const handleAnswer = async ({ answer }: { answer: RTCSessionDescriptionInit }) => {
-      const pc = pcRef.current;
+    const handleAnswer = async (data: {
+      answer: RTCSessionDescriptionInit;
+      from: string;
+    }) => {
+      const pc = peersRef.current.get(data.from);
       if (!pc) return;
 
-      // set remote description
-      await pc.setRemoteDescription(new RTCSessionDescription(answer));
-      await flushIceQueue();
+      await pc.setRemoteDescription(
+        new RTCSessionDescription(data.answer)
+      );
+
+      await flushIceQueue(data.from);
     };
 
     // recieves network candidates from other pper
-    const handleIce = async ({ candidate }: { candidate: RTCIceCandidateInit }) => {
-      const pc = pcRef.current;
+    const handleIce = async ({ candidate, from }: any) => {
+      const queue = iceQueueRef.current.get(from) || [];
+      queue.push(candidate);
+      iceQueueRef.current.set(from, queue);
+
+      const pc = peersRef.current.get(from);
       if (!pc) return;
 
-      // if remoteDescription not ready: store in queue
-      if (!pc.remoteDescription) {
-        iceQueueRef.current.push(candidate);
-        return;
+      if (pc.remoteDescription) {
+        await flushIceQueue(from);
       }
-
-      try {
-        await pc.addIceCandidate(new RTCIceCandidate(candidate));
-      } catch (err) {
-        console.error("ICE error:", err);
-      }
-    };
-
-    const handleRoomUsers = (count: number) => {
-      if (count !== 2) return;
-
-      peerReadyRef.current = true;
-      void startCall();
     };
 
     // runs when camera is ready
     const onCameraReady = () => {
       isReadyRef.current = true;
 
-      // if offer already waiting process ir else try call
-      if (pendingOfferRef.current) {
-        const offer = pendingOfferRef.current;
-        pendingOfferRef.current = null;
-        void handleOffer({ offer });
-      } else {
-        void startCall();
+      for (const peerId of participantsRef.current) {
+        if (!peersRef.current.has(peerId)) {
+          createOrGetPeer(peerId);
+        }
+      }
+
+      if (pendingOfferRef.current.length > 0) {
+        const offers = [...pendingOfferRef.current];
+        pendingOfferRef.current = [];
+
+        for (const offerData of offers) {
+          void handleOffer(offerData);
+        }
       }
     };
 
@@ -223,7 +306,7 @@ export default function MeetingRoom({ meetingId, isInitiator, signaling, onLeave
       onOffer: handleOffer,
       onAnswer: handleAnswer,
       onIce: handleIce,
-      onRoomUsers: handleRoomUsers,
+      onParticipants: handleParticipants,
     });
 
     void startCamera();
@@ -238,22 +321,24 @@ export default function MeetingRoom({ meetingId, isInitiator, signaling, onLeave
       streamRef.current?.getTracks().forEach((t) => t.stop());
       streamRef.current = null;
 
-      //close WebRTC connection: frees network resources
-      pcRef.current?.close();
-      pcRef.current = null;
+      // close ALL peer connections (mesh cleanup)
+      peersRef.current.forEach((pc) => pc.close());
+      peersRef.current.clear();
 
-      // reset refs:prevents stale state when re-entering room
+      // reset refs
       isReadyRef.current = false;
-      callStartedRef.current = false;
-      peerReadyRef.current = false;
-      pendingOfferRef.current = null;
-      iceQueueRef.current = [];
+      // callStartedRef.current = false;
+      // peerReadyRef.current = false;
+      pendingOfferRef.current = [];
+
+      // clear ICE queues (per-peer map)
+      iceQueueRef.current.clear();
     };
-  }, [meetingId, isInitiator, signaling]);
+  }, [meetingId, signaling]);
 
   // sets flag so cleanup knows user intentionally left
   const handleLeave = () => {
-    leavingRef.current = true;
+    // leavingRef.current = true;
     onLeave();
   };
 
@@ -301,24 +386,51 @@ export default function MeetingRoom({ meetingId, isInitiator, signaling, onLeave
   const mins = Math.floor(seconds / 60);
   const secs = seconds % 60;
 
-  return (
-    <div className="relative w-full min-h-[calc(100dvh-5rem)] bg-[#0c0d12] overflow-hidden text-white">
-      <div className="absolute inset-0">
-        <video
-          ref={remoteVideoRef}
-          autoPlay
-          playsInline
-          className="w-full h-full object-cover"
-        />
-      </div>
+  const remoteParticipants = Array.from(
+    remoteStreams.entries()
+  );
 
-      <header className="absolute top-0 left-0 z-50 flex w-full flex-col gap-3 border-b border-white/10 bg-white/10 px-4 py-3 backdrop-blur-md sm:flex-row sm:items-center sm:justify-between sm:px-6">
+  const allParticipants = [
+    ...(localStream
+      ? [
+        {
+          peerId: "You",
+          stream: localStream,
+        },
+      ]
+      : []),
+
+    ...remoteParticipants.map(([peerId, stream]) => ({
+      peerId,
+      stream,
+    })),
+  ];
+
+  const participantCount = allParticipants.length;
+
+  const layouts: Record<number, { cols: number }> = {
+    1: { cols: 1 },
+    2: { cols: 2 },
+    3: { cols: 3 },
+    4: { cols: 4 },
+    5: { cols: 5 },
+    6: { cols: 3 },
+  };
+
+  const cols =
+    layouts[participantCount]?.cols ?? 3;
+
+  return (
+    <div className="group relative w-full min-h-[calc(100dvh-5rem)] bg-[#0c0d12] overflow-hidden text-white">
+
+      <header className="absolute top-0 left-0 z-50 flex w-full flex-col gap-3 border-b border-white/10 bg-white/10 px-4 py-3 backdrop-blur-md sm:flex-row sm:items-center sm:justify-between sm:px-6 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
         <div className="flex items-center gap-2 text-xs text-white/60">
+
 
           <span className="text-white/70 text-sm font-medium">
             ID: <span className="font-mono text-white/70 break-all">
-  {meetingId}
-</span>
+              {meetingId}
+            </span>
           </span>
 
           <button
@@ -343,48 +455,29 @@ export default function MeetingRoom({ meetingId, isInitiator, signaling, onLeave
             {String(secs).padStart(2, "0")}
           </div>
 
-          {/* <Button
-            variant="ghost"
-            className="text-white hover:bg-white/10"
-            onClick={handleLeave}
-          >
-            Leave
-          </Button> */}
         </div>
       </header>
 
-      <div
-  className="
-    absolute
-    right-3
-    top-24
-    h-24
-    w-32
-    sm:right-6
-    sm:h-32
-    sm:w-48
-    rounded-xl
-    overflow-hidden
-    border
-    border-white/10
-    backdrop-blur-md
-    bg-white/10
-  "
->
-        <video
-          ref={localVideoRef}
-          autoPlay
-          playsInline
-          muted
-          className="w-full h-full object-cover"
-        />
-        <div className="absolute bottom-1 left-2 text-[10px] text-white/80">
-          You
+      <div className="absolute inset-0 p-4 pt-18 pb-18">
+        <div
+          className="grid h-full w-full gap-4"
+          style={{
+            gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`,
+          }}
+        >
+          {allParticipants.map(({ peerId, stream }) => (
+            <RemoteVideo
+              key={peerId}
+              name={peerId === "You" ? "You" : peerId.slice(0, 8)}
+              stream={stream}
+              muted={peerId === "You"}
+            />
+          ))}
         </div>
       </div>
 
       <nav
-  className="
+        className="
     absolute
     bottom-4
     left-1/2
@@ -406,9 +499,13 @@ export default function MeetingRoom({ meetingId, isInitiator, signaling, onLeave
     sm:gap-6
     sm:px-6
     sm:py-3
-  "
->
 
+    opacity-0 
+    transition-opacity 
+    duration-300 
+    group-hover:opacity-100
+  "
+      >
         {/* AUDIO */}
         <button onClick={toggleAudio} className="group flex flex-col items-center gap-1">
           <div
@@ -420,8 +517,8 @@ export default function MeetingRoom({ meetingId, isInitiator, signaling, onLeave
             {isAudioMuted ? <MicOff size={20} /> : <Mic size={20} />}
           </div>
           <span className="hidden text-[10px] text-white/60 sm:block">
-  Mute
-</span>
+            Mute
+          </span>
         </button>
 
         {/* VIDEO */}
@@ -434,9 +531,9 @@ export default function MeetingRoom({ meetingId, isInitiator, signaling, onLeave
           >
             {isVideoMuted ? <VideoOff size={20} /> : <Video size={20} />}
           </div>
-         <span className="hidden text-[10px] text-white/60 sm:block">
- Video
-</span>
+          <span className="hidden text-[10px] text-white/60 sm:block">
+            Video
+          </span>
         </button>
 
         {/* SCREEN SHARE
@@ -463,9 +560,9 @@ export default function MeetingRoom({ meetingId, isInitiator, signaling, onLeave
           <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center bg-red-600 text-white hover:bg-red-700 transition-all duration-200 group-active:scale-95">
             <PhoneOff size={20} />
           </div>
-         <span className="hidden text-[10px] text-white/60 sm:block">
-  End
-</span>
+          <span className="hidden text-[10px] text-white/60 sm:block">
+            End
+          </span>
         </button>
 
       </nav>

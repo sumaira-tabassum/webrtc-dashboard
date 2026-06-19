@@ -84,21 +84,21 @@ export default function UsersTable() {
         <div className="flex gap-2">
           <button onClick={() => setFilter("all")}
             className={`px-4 py-1.5 rounded-full text-sm font-medium transition ${filter === "all"
-              ? "bg-purple-600 text-white"
+              ? "bg-primary text-white"
               : "hover:bg-white/50 text-gray-600"
               }`}>
             All
           </button>
           <button onClick={() => setFilter("admin")}
             className={`px-4 py-1.5 rounded-full text-sm font-medium transition ${filter === "admin"
-              ? "bg-purple-600 text-white"
+              ? "bg-primary text-white"
               : "hover:bg-white/50 text-gray-600"
               }`}>
             Admins
           </button>
           <button onClick={() => setFilter("user")}
             className={`px-4 py-1.5 rounded-full text-sm font-medium transition ${filter === "user"
-              ? "bg-purple-600 text-white"
+              ? "bg-primary text-white"
               : "hover:bg-white/50 text-gray-600"
               }`}>
             Users
@@ -130,7 +130,7 @@ export default function UsersTable() {
                 <div className="flex items-center gap-3">
 
                   {/* Avatar (fallback initial) */}
-                  <div className="w-10 h-10 rounded-full bg-purple-600 flex items-center justify-center text-white font-bold">
+                  <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-white font-bold">
                     {u.email?.[0]?.toUpperCase()}
                   </div>
 
@@ -150,7 +150,7 @@ export default function UsersTable() {
               <td className="px-6 py-4">
                 <span className={`px-3 py-1 rounded-full text-xs font-semibold uppercase
                   ${u.role === "admin"
-                    ? "bg-purple-100 text-purple-700"
+                    ? "bg-purple-100 text-primary"
                     : "bg-gray-100 text-gray-600"
                   }`}
                 >
@@ -177,7 +177,7 @@ export default function UsersTable() {
               <td className="px-6 py-4 text-right">
                 <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition">
 
-                  <button className="p-2 hover:bg-purple-50 text-purple-600 rounded-lg"
+                  <button className="p-2 hover:bg-purple-50 text-primary rounded-lg"
                     onClick={() => {
                       setSelectedUser(u);
                       setEditOpen(true);

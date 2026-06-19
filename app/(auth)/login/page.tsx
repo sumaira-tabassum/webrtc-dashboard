@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Mail, Lock, User } from "lucide-react";
@@ -22,7 +22,7 @@ export default function LoginPage() {
     });
 
     if (error) {
-      console.log("LOGIN ERROR:", error.message);
+     console.log("LOGIN ERROR:" + error.message);
       return;
     }
 
@@ -42,7 +42,7 @@ export default function LoginPage() {
     console.log("PROFILE ERROR:", profileError);
 
     if (profileError) {
-      console.log("PROFILE ERROR:", profileError.message);
+      console.log("PROFILE ERROR:"+ profileError.message);
       return;
     }
 
@@ -142,9 +142,9 @@ export default function LoginPage() {
               className="
     w-full
     h-11
-    border-purple-600
+    border-primary
     text-white
-    bg-purple-600
+    bg-primary
     transition-colors
   "
             >

@@ -211,7 +211,7 @@ export default function EditUserModal({
             <Button
               disabled={loading}
               className="
-                bg-purple-600
+                bg-primary
                 text-white
                 hover:shadow-lg hover:shadow-[#4648d4]/30
               "

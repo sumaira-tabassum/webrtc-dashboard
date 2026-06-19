@@ -4,6 +4,10 @@ import { supabaseClient } from "@/lib/supabase/client";
 import { useEffect, useState } from "react";
 import { Bell, Moon, Search, Menu } from "lucide-react";
 import { Button } from "../ui/button";
+import NotificationPanel from "./notification-panel";
+import { useContext } from "react";
+import { MeetingContext } from "@/app/(dashboard)/layout";
+import { useRouter } from "next/navigation";
 
 interface TopNavbarProps {
   onMenuClick: () => void;
@@ -13,8 +17,21 @@ export default function TopNavbar({
   onMenuClick,
 }: TopNavbarProps) {
 
+  const {
+    inMeeting,
+    sidebarOpen,
+    setSidebarOpen,
+  } = useContext(MeetingContext);
+
+  const [notifOpen, setNotifOpen] = useState(false);
   const [user, setUser] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  const unreadCount = notifications.filter(n => !n.read).length;
+
+  const router = useRouter();
 
   // Fetch user from supabase
   useEffect(() => {
@@ -46,15 +63,94 @@ export default function TopNavbar({
       .toUpperCase();
   };
 
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const channel = supabaseClient
+      .channel("notifications-realtime")
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "notifications",
+          filter: `user_id=eq.${user.id}`,
+        },
+        (payload) => {
+          const newNotification = payload.new;
+
+          setNotifications((prev) => [
+            newNotification,
+            ...prev,
+          ]);
+        }
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "notifications",
+          filter: `user_id=eq.${user.id}`,
+        },
+        (payload) => {
+          const updated = payload.new;
+
+          setNotifications((prev) =>
+            prev.map((n) =>
+              n.id === updated.id ? updated : n
+            )
+          );
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabaseClient.removeChannel(channel);
+    };
+  }, [user?.id]);
+
   return (
-    <header className="fixed top-0 right-0 left-0 lg:left-64 z-30 h-20 border-b border-white/30 bg-white/70 backdrop-blur-xl">
+
+    <header
+      className={`
+      fixed top-0 right-0 left-0 z-30 h-20
+      border-b border-white/30
+      bg-white/70 backdrop-blur-xl
+
+      ${inMeeting
+          ? (
+            sidebarOpen
+              ? "lg:left-64"
+              : "lg:left-0"
+          )
+          : "lg:left-64"
+        }
+      `}
+    >
 
       <div className="flex h-full items-center justify-between px-4 sm:px-6 lg:px-8">
+
+        {/* <button
+            onClick={() => setSidebarOpen(prev => !prev)}
+            className="
+            flex items-center justify-center
+            w-9 h-9
+            rounded-lg
+            bg-white/10
+            hover:bg-white/20
+            transition
+            "
+          >
+            <Menu size={18} />
+          </button> */}
 
         <Button
           variant="ghost"
           size="icon"
-          className="lg:hidden"
+          className={`
+          ${inMeeting ? "flex" : "lg:hidden"}
+          `}
           onClick={onMenuClick}
         >
           <Menu className="h-5 w-5" />
@@ -75,10 +171,17 @@ export default function TopNavbar({
 
         <div className="flex items-center gap-3 sm:gap-5">
 
-          <button className="relative">
+          <button
+            onClick={() => setNotifOpen(true)}
+            className="relative"
+          >
             <Bell className="text-gray-600" />
 
-            <span className="absolute right-0 top-0 h-2 w-2 rounded-full bg-red-500"></span>
+            {unreadCount > 0 && (
+              <span className="absolute -top-1 -right-1 min-w-4 h-4 px-1 rounded-full bg-red-500 text-white text-[10px] flex items-center justify-center">
+                {unreadCount}
+              </span>
+            )}
           </button>
 
           <button>
@@ -105,7 +208,7 @@ export default function TopNavbar({
             </div>
 
             {/* AVATAR */}
-           <div className="flex-shrink-0 w-10 h-10 rounded-full bg-purple-600 flex items-center justify-center text-white font-semibold uppercase">
+            <div className="flex-shrink-0 w-10 h-10 rounded-full bg-primary flex items-center justify-center text-white font-semibold uppercase">
               {profile?.full_name?.charAt(0) || "U"}
             </div>
 
@@ -115,6 +218,22 @@ export default function TopNavbar({
 
       </div>
 
+      {/* <NotificationPanel
+        userId={user?.id}
+        open={notifOpen}
+        onClose={() => setNotifOpen(false)}
+      /> */}
+
+
+      <NotificationPanel
+        userId={user?.id}
+        open={notifOpen}
+        onClose={() => setNotifOpen(false)}
+        onJoinMeeting={(meetingId) => {
+         setNotifOpen(false)
+          router.push(`/meet?join=${meetingId}`);
+        }}
+      />
     </header>
   );
 }

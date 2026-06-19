@@ -24,7 +24,7 @@ export default function UsersPage() {
           </div>
 
           <div>
-          <button className="flex items-center gap-3 rounded-xl bg-purple-600 px-4 py-3 font-semibold text-white shadow-md"
+          <button className="flex items-center gap-3 rounded-xl bg-primary px-4 py-3 font-semibold text-white shadow-md"
           onClick={()=>setOpen(true)}>
             <UserPlus size={20} />
             Create user

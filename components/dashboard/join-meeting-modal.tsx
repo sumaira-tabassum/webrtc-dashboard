@@ -118,7 +118,7 @@ export default function JoinMeetingModal({ open, onOpenChange, onJoin }: Props) 
             <Button
               type="submit"
               className="
-                bg-purple-600
+                bg-primary
                 text-white
                 hover:shadow-lg hover:shadow-[#4648d4]/30
               "

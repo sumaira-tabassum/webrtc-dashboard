@@ -1,30 +1,53 @@
 import { supabaseClient } from "@/lib/supabase/client";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 
-const MAX_PARTICIPANTS = 2;
+const MAX_PARTICIPANTS = 6;
 const JOIN_TIMEOUT_MS = 5000;
 
-type Role = "host" | "guest";
+// type Role = "host" | "guest";
 
+//info about user
 type PresenceMeta = {
-  role: Role;
+  // role: Role;
   odId: string;
 };
 
+type OfferPayload = {
+  offer: RTCSessionDescriptionInit;
+  from: string;
+  to: string;
+};
+
+type AnswerPayload = {
+  answer: RTCSessionDescriptionInit;
+  from: string;
+  to: string;
+};
+
+type IcePayload = {
+  candidate: RTCIceCandidateInit;
+  from: string;
+  to: string;
+};
+
 export class MeetingSignaling {
-  private channel: RealtimeChannel | null = null;
-  private roomId: string | null = null;
-  readonly odId: string;
+  private channel: RealtimeChannel | null = null; //Stores current Supabase room.
+  private roomId: string | null = null;         //meeting id
+  readonly odId: string;                        //unique browser identifier
 
-  private onOffer?: (payload: { offer: RTCSessionDescriptionInit }) => void;
-  private onAnswer?: (payload: { answer: RTCSessionDescriptionInit }) => void;
-  private onIce?: (payload: { candidate: RTCIceCandidateInit }) => void;
-  private onRoomUsers?: (count: number) => void;
+  private onOffer?: (payload: OfferPayload) => void;
+  private onAnswer?: (payload: AnswerPayload) => void;
+  private onIce?: (payload: IcePayload) => void;
 
+  private onParticipants?: (participants: string[]) => void;
+  // private onRoomUsers?: (count: number) => void;
+
+  // Every browser tab gets its own unique ID.
   constructor() {
-    this.odId = crypto.randomUUID();
+    this.odId = crypto.randomUUID();    //browser API 
   }
 
+  // helper function
   private channelName(roomId: string) {
     return `meeting:${roomId}`;
   }
@@ -34,55 +57,71 @@ export class MeetingSignaling {
     if (!channel) return 0;
 
     const state = channel.presenceState();
-    return Object.values(state).reduce((n, presences) => {
+    return Object.values(state).reduce((n, presences) => {        //get only values, not keys
       const list = Array.isArray(presences) ? presences : [presences];
       return n + list.length;
     }, 0);
   }
 
-  private hasHost(ch?: RealtimeChannel): boolean {
+  private getParticipants(ch?: RealtimeChannel): string[] {
     const channel = ch ?? this.channel;
-    if (!channel) return false;
+    if (!channel) return [];
 
     const state = channel.presenceState();
-    return Object.values(state).some((presences) => {
-      const list = Array.isArray(presences) ? presences : [presences];
-      return list.some((p) => (p as unknown as PresenceMeta).role === "host");
-    });
+
+    const participants = Object.values(state)
+      .flat()
+      .map((p) => (p as unknown as PresenceMeta).odId)
+      .filter(Boolean);
+
+    return [...new Set(participants)];
   }
 
   private setupBroadcastHandlers(channel: RealtimeChannel) {
     channel
       .on("broadcast", { event: "offer" }, ({ payload }) => {
-        const data = payload as { offer: RTCSessionDescriptionInit; from: string };
-        if (data.from === this.odId) return;
-        this.onOffer?.({ offer: data.offer });
+        const data = payload as { offer: RTCSessionDescriptionInit; from: string; to: string };
+        // if (data.from === this.odId) return;
+        if (data.to !== this.odId) return;
+        this.onOffer?.({
+          offer: data.offer,
+          from: data.from,
+          to: data.to
+        });
       })
       .on("broadcast", { event: "answer" }, ({ payload }) => {
-        const data = payload as { answer: RTCSessionDescriptionInit; from: string };
+        const data = payload as { answer: RTCSessionDescriptionInit; from: string; to: string };
         if (data.from === this.odId) return;
-        this.onAnswer?.({ answer: data.answer });
+        if (data.to !== this.odId) return;
+        this.onAnswer?.({
+          answer: data.answer,
+          from: data.from,
+          to: data.to,
+        });
       })
       .on("broadcast", { event: "ice-candidate" }, ({ payload }) => {
-        const data = payload as { candidate: RTCIceCandidateInit; from: string };
+        const data = payload as { candidate: RTCIceCandidateInit; from: string; to: string };
         if (data.from === this.odId) return;
-        this.onIce?.({ candidate: data.candidate });
+        if (data.to !== this.odId) return;
+        this.onIce?.({
+          candidate: data.candidate,
+          from: data.from,
+          to: data.to,
+        });
       });
   }
 
   private setupPresenceHandler(channel: RealtimeChannel) {
     channel.on("presence", { event: "sync" }, () => {
-      const count = this.countParticipants(channel);
-      if (count === MAX_PARTICIPANTS) {
-        this.onRoomUsers?.(count);
-      }
+      const participants = this.getParticipants(channel);
+
+      this.onParticipants?.(participants);
     });
   }
 
   private async subscribeAndTrack(
     channel: RealtimeChannel,
-    roomId: string,
-    role: Role
+    roomId: string
   ): Promise<void> {
     this.channel = channel;
     this.roomId = roomId;
@@ -92,7 +131,7 @@ export class MeetingSignaling {
     await new Promise<void>((resolve, reject) => {
       channel.subscribe(async (status) => {
         if (status === "SUBSCRIBED") {
-          const trackResult = await channel.track({ role, odId: this.odId });
+          const trackResult = await channel.track({ odId: this.odId });
           if (trackResult === "error") {
             reject(new Error("Failed to join room"));
             return;
@@ -115,7 +154,7 @@ export class MeetingSignaling {
       },
     });
 
-    await this.subscribeAndTrack(channel, roomId, "host");
+    await this.subscribeAndTrack(channel, roomId);
   }
 
   async joinRoom(roomId: string): Promise<{ ok: boolean; error?: string }> {
@@ -152,9 +191,10 @@ export class MeetingSignaling {
         if (settled) return;
 
         const count = this.countParticipants(channel);
-        const hostPresent = this.hasHost(channel);
+        if (count === 0) return;
 
-        if (!hostPresent) return;
+        // const hostPresent = this.hasHost(channel);
+        // if (!hostPresent) return;
 
         if (count >= MAX_PARTICIPANTS) {
           void channel.unsubscribe();
@@ -164,7 +204,7 @@ export class MeetingSignaling {
         }
 
         void channel
-          .track({ role: "guest", odId: this.odId })
+          .track({odId: this.odId })
           .then((status) => {
             if (status === "error") {
               void channel.unsubscribe();
@@ -187,45 +227,43 @@ export class MeetingSignaling {
 
   /** Re-check presence when entering the meeting view (handles race after join). */
   syncRoomUsers(): void {
-    const count = this.countParticipants();
-    if (count === MAX_PARTICIPANTS) {
-      this.onRoomUsers?.(count);
-    }
+    const participants = this.getParticipants();
+    this.onParticipants?.(participants);
   }
 
   setHandlers(handlers: {
-    onOffer?: (payload: { offer: RTCSessionDescriptionInit }) => void;
-    onAnswer?: (payload: { answer: RTCSessionDescriptionInit }) => void;
-    onIce?: (payload: { candidate: RTCIceCandidateInit }) => void;
-    onRoomUsers?: (count: number) => void;
+    onOffer?: (payload: OfferPayload) => void;
+    onAnswer?: (payload: AnswerPayload) => void;
+    onIce?: (payload: IcePayload) => void;
+    onParticipants?: (participants: string[]) => void;
   }) {
     this.onOffer = handlers.onOffer;
     this.onAnswer = handlers.onAnswer;
     this.onIce = handlers.onIce;
-    this.onRoomUsers = handlers.onRoomUsers;
+    this.onParticipants = handlers.onParticipants;
   }
 
-  sendOffer(offer: RTCSessionDescriptionInit) {
+  sendOffer(to: string, offer: RTCSessionDescriptionInit) {
     void this.channel?.send({
       type: "broadcast",
       event: "offer",
-      payload: { offer, from: this.odId },
+      payload: { to, offer, from: this.odId },
     });
   }
 
-  sendAnswer(answer: RTCSessionDescriptionInit) {
+  sendAnswer(to: string, answer: RTCSessionDescriptionInit) {
     void this.channel?.send({
       type: "broadcast",
       event: "answer",
-      payload: { answer, from: this.odId },
+      payload: { to, answer, from: this.odId },
     });
   }
 
-  sendIceCandidate(candidate: RTCIceCandidateInit) {
+  sendIceCandidate(to: string, candidate: RTCIceCandidateInit) {
     void this.channel?.send({
       type: "broadcast",
       event: "ice-candidate",
-      payload: { candidate, from: this.odId },
+      payload: { to, candidate, from: this.odId },
     });
   }
 
@@ -241,6 +279,6 @@ export class MeetingSignaling {
     this.onOffer = undefined;
     this.onAnswer = undefined;
     this.onIce = undefined;
-    this.onRoomUsers = undefined;
+    this.onParticipants = undefined;
   }
 }

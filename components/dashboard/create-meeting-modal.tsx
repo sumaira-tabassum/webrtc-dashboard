@@ -1,9 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Lock, Copy, UserPlus } from "lucide-react";
+import UsersMultiSelect from "./users-multi-select";
+import { supabaseClient } from "@/lib/supabase/client";
 
 type Props = {
   open: boolean;
@@ -21,28 +24,77 @@ function generateMeetingId() {
 export default function CreateMeetingModal({ open, onOpenChange, onStartMeeting }: Props) {
   const [meetingId] = useState(generateMeetingId());
   const [copied, setCopied] = useState(false);
+  const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
 
-  // const copyToClipboard = async () => {
-  //   await navigator.clipboard.writeText(meetingId);
-  //   setCopied(true);
-  //   setTimeout(() => setCopied(false), 2500);
-  // };
-const copyToClipboard = async () => {
-  try {
-    if (typeof window === "undefined") return;
+  const [sender, setSender] = useState<any>(null);
 
-    if (!navigator?.clipboard?.writeText) {
-      throw new Error("Clipboard API not supported");
+useEffect(() => {
+  const loadSender = async () => {
+    const {
+      data: { user },
+    } = await supabaseClient.auth.getUser();
+
+    if (!user) return;
+
+    const { data: profile } = await supabaseClient
+      .from("profiles")
+      .select("full_name")
+      .eq("id", user.id)
+      .single();
+
+    setSender({
+      id: user.id,
+      full_name: profile?.full_name,
+    });
+  };
+
+  loadSender();
+}, []);
+
+  const handleInvite = async () => {
+    if (!selectedUsers.length) return;
+
+    const notifications = selectedUsers.map((userId) => ({
+      user_id: userId,
+      title: "Meeting Invitation",
+      message: `You were invited to join a meeting`,
+      type: "meeting_invite",
+      meeting_id: meetingId,
+      read: false,
+
+      sender_id: sender?.id,
+      sender_name: sender?.full_name,
+
+    }));
+
+    const { error } = await supabaseClient
+      .from("notifications")
+      .insert(notifications);
+
+    if (error) {
+      console.error("Invite failed:", error.message);
+      return;
     }
 
-    await navigator.clipboard.writeText(meetingId);
+    console.log("Invites sent successfully");
+  };
 
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2500);
-  } catch (err) {
-    console.error("Copy failed:", err);
-  }
-};
+  const copyToClipboard = async () => {
+    try {
+      if (typeof window === "undefined") return;
+
+      if (!navigator?.clipboard?.writeText) {
+        throw new Error("Clipboard API not supported");
+      }
+
+      await navigator.clipboard.writeText(meetingId);
+
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2500);
+    } catch (err) {
+      console.error("Copy failed:", err);
+    }
+  };
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
@@ -108,7 +160,7 @@ const copyToClipboard = async () => {
                     />
 
                     <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[#4648d4]/40">
-                      🔒
+                      <Lock size={18}></Lock>
                     </span>
                   </div>
 
@@ -124,7 +176,7 @@ const copyToClipboard = async () => {
                     text-[#4648d4]
                     hover:bg-white/40
                   "
-                  >
+                  > <Copy size={20}></Copy>
                     {copied ? "Copied" : "Copy"}
                   </Button>
                 </div>
@@ -132,6 +184,35 @@ const copyToClipboard = async () => {
                 <p className="text-xs text-[#464554]/70 ml-1">
                   This ID can be shared with participants to join the session.
                 </p>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-[#464554] ml-1">
+                  Invite Participants
+                </label>
+
+                <div className="flex gap-3">
+                  <div className="relative flex-1">
+                    <UsersMultiSelect
+                      selectedUsers={selectedUsers}
+                      setSelectedUsers={setSelectedUsers}
+                    />
+                  </div>
+                  <Button
+                    type="button"
+                    onClick={handleInvite}
+                    className="
+                    h-12 px-4
+                    rounded-xl
+                    bg-white/20
+                    border border-white/50
+                    text-[#4648d4]
+                    hover:bg-white/40"
+                  >
+                    <UserPlus />
+                    Invite
+                  </Button>
+                </div>
               </div>
 
               {/* Info Box */}
@@ -171,7 +252,7 @@ const copyToClipboard = async () => {
                 className="
                 rounded-xl
                 text-white
-                bg-purple-600
+                bg-primary
                 hover:shadow-lg hover:shadow-[#4648d4]/30
               "
                 onClick={() => {
