@@ -1,5 +1,7 @@
 "use client";
 
+import { Suspense } from "react";
+
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 
@@ -13,8 +15,8 @@ import { MeetingSignaling } from "@/lib/signaling";
 
 import { useRouter, useSearchParams } from "next/navigation";
 
-export default function MeetPage() {
-  const [open, setOpen] = useState(false);
+function MeetPageContent() {
+    const [open, setOpen] = useState(false);
   const [joinOpen, setJoinOpen] = useState(false);
   const [activeMeetingId, setActiveMeetingId] = useState<string | null>(null);
   const [isInitiator, setIsInitiator] = useState(false);
@@ -143,3 +145,12 @@ useEffect(() => {
     </div>
   );
 }
+
+export default function MeetPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <MeetPageContent />
+    </Suspense>
+  );
+}
+
