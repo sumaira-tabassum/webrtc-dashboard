@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Lock, Copy, UserPlus } from "lucide-react";
 import UsersMultiSelect from "./users-multi-select";
 import { supabaseClient } from "@/lib/supabase/client";
+import { Info, Check } from 'lucide-react';
 
 type Props = {
   open: boolean;
@@ -25,34 +26,37 @@ export default function CreateMeetingModal({ open, onOpenChange, onStartMeeting 
   const [meetingId] = useState(generateMeetingId());
   const [copied, setCopied] = useState(false);
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
+  const [inviteSent, setInviteSent] = useState(false);
 
   const [sender, setSender] = useState<any>(null);
 
-useEffect(() => {
-  const loadSender = async () => {
-    const {
-      data: { user },
-    } = await supabaseClient.auth.getUser();
+  useEffect(() => {
+    const loadSender = async () => {
+      const {
+        data: { user },
+      } = await supabaseClient.auth.getUser();
 
-    if (!user) return;
+      if (!user) return;
 
-    const { data: profile } = await supabaseClient
-      .from("profiles")
-      .select("full_name")
-      .eq("id", user.id)
-      .single();
+      const { data: profile } = await supabaseClient
+        .from("profiles")
+        .select("full_name")
+        .eq("id", user.id)
+        .single();
 
-    setSender({
-      id: user.id,
-      full_name: profile?.full_name,
-    });
-  };
+      setSender({
+        id: user.id,
+        full_name: profile?.full_name,
+      });
+    };
 
-  loadSender();
-}, []);
+    loadSender();
+  }, []);
 
   const handleInvite = async () => {
-    if (!selectedUsers.length) return;
+    if (!selectedUsers.length) {
+  return;
+}
 
     const notifications = selectedUsers.map((userId) => ({
       user_id: userId,
@@ -77,6 +81,13 @@ useEffect(() => {
     }
 
     console.log("Invites sent successfully");
+    setInviteSent(true);
+
+    setSelectedUsers([]);
+
+    setTimeout(() => {
+      setInviteSent(false);
+    }, 2500);
   };
 
   const copyToClipboard = async () => {
@@ -108,7 +119,7 @@ useEffect(() => {
           p-0
           overflow-visible
           rounded-xl
-          bg-white/70
+          bg-white
           backdrop-blur-xl
           border border-white/50
           shadow-[0_20px_50px_-12px_rgba(99,102,241,0.15)]
@@ -152,7 +163,7 @@ useEffect(() => {
                       rounded-xl
                       font-semibold
                       tracking-wider
-                      text-[#4648d4]
+                      text-primary
                       focus-visible:ring-[#4648d4]/20
                       focus-visible:ring-4
                       cursor-default
@@ -173,7 +184,7 @@ useEffect(() => {
                     rounded-xl
                     bg-white/20
                     border border-white/50
-                    text-[#4648d4]
+                    text-primary
                     hover:bg-white/40
                   "
                   > <Copy size={20}></Copy>
@@ -199,6 +210,10 @@ useEffect(() => {
                     />
                   </div>
                   <Button
+                    disabled={
+                      selectedUsers.length === 0 ||
+                      inviteSent
+                    }
                     type="button"
                     onClick={handleInvite}
                     className="
@@ -206,18 +221,31 @@ useEffect(() => {
                     rounded-xl
                     bg-white/20
                     border border-white/50
-                    text-[#4648d4]
+                    text-primary
                     hover:bg-white/40"
                   >
-                    <UserPlus />
-                    Invite
+                    {inviteSent ? (
+                      <>
+                        <Check size={18} />
+                        Sent
+                      </>
+                    ) : (
+                      <>
+                        <UserPlus size={18} />
+                        Invite
+                      </>
+                    )}
                   </Button>
+                  <>
+
+                  </>
                 </div>
               </div>
 
               {/* Info Box */}
               <div className="flex gap-3 p-4 rounded-xl bg-[#6063ee]/10 border border-[#6063ee]/10">
-                <div className="text-[#4648d4]">ℹ️</div>
+                {/* <div className="text-[#4648d4]"></div> */}
+                <Info></Info>
 
                 <div>
                   <p className="text-sm font-medium text-[#131b2e]">
@@ -279,9 +307,39 @@ useEffect(() => {
       `}
       >
         <div className="px-6 py-3 rounded-full bg-white/70 backdrop-blur-xl border border-white/30 shadow-lg flex items-center gap-2">
-          <span className="text-green-500">✔</span>
+          {/* <span className="text-green-500"></span> */}
+          <Check className="text-green-500"></Check>
           <span className="text-sm text-[#131b2e]">
             ID copied to clipboard
+          </span>
+        </div>
+      </div>
+
+      <div
+        className={`
+    fixed bottom-10 left-1/2 -translate-x-1/2 z-[100]
+    transition-all duration-500
+    ${inviteSent
+            ? "opacity-100 translate-y-0"
+            : "opacity-0 translate-y-10"
+          }
+`}
+      >
+        <div
+          className="
+      px-6 py-3
+      rounded-full
+      bg-white/70
+      backdrop-blur-xl
+      border border-white/30
+      shadow-lg
+      flex items-center gap-2
+    "
+        >
+          <Check className="text-green-500" />
+
+          <span className="text-sm text-[#131b2e]">
+            Invitations sent successfully
           </span>
         </div>
       </div>

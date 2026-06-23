@@ -58,22 +58,28 @@ export default function NotificationPanel({
         .order("created_at", { ascending: false });
 
       setNotifications(data || []);
+
+      await supabaseClient
+  .from("notifications")
+  .update({ read: true })
+  .eq("user_id", userId)
+  .eq("read", false);
     };
 
     fetchNotifications();
   }, [open, userId]);
 
-  const markAllAsRead = async () => {
-    await supabaseClient
-      .from("notifications")
-      .update({ read: true })
-      .eq("user_id", userId)
-      .eq("read", false);
+  // const markAllAsRead = async () => {
+  //   await supabaseClient
+  //     .from("notifications")
+  //     .update({ read: true })
+  //     .eq("user_id", userId)
+  //     .eq("read", false);
 
-    setNotifications((prev) =>
-      prev.map((n) => ({ ...n, read: true }))
-    );
-  };
+  //   setNotifications((prev) =>
+  //     prev.map((n) => ({ ...n, read: true }))
+  //   );
+  // };
 
   const markAsRead = async (id: string) => {
     await supabaseClient
@@ -119,12 +125,12 @@ export default function NotificationPanel({
             Notifications
           </h2>
 
-          <button
-            onClick={markAllAsRead}
+          {/* <button
+            // onClick={markAllAsRead}
             className="text-sm text-primary hover:text-primary"
           >
             Mark all as read
-          </button>
+          </button> */}
         </div>
 
 
@@ -201,9 +207,15 @@ export default function NotificationPanel({
         </div>
 
         <div className="border-t border-gray-200/40 p-3 text-center">
-          <button className="text-sm text-gray-600 hover:text-primary">
+        <span className="text-sm text-gray-500">
+    Total notifications:{" "}
+    <span className="font-medium text-gray-700">
+      {notifications.length}
+    </span>
+  </span>
+          {/* <button className="text-sm text-gray-600 hover:text-primary">
             View all notifications
-          </button>
+          </button> */}
         </div>
       </div>
     </>

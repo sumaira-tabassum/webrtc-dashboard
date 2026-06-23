@@ -8,6 +8,8 @@ import NotificationPanel from "./notification-panel";
 import { useContext } from "react";
 import { MeetingContext } from "@/app/(dashboard)/layout";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+import { Video, ArrowRight } from "lucide-react";
 
 interface TopNavbarProps {
   onMenuClick: () => void;
@@ -66,6 +68,24 @@ export default function TopNavbar({
   useEffect(() => {
     if (!user?.id) return;
 
+    const fetchNotifications = async () => {
+      const { data, error } = await supabaseClient
+        .from("notifications")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false });
+
+      if (!error) {
+        setNotifications(data || []);
+      }
+    };
+
+    fetchNotifications();
+  }, [user?.id]);
+
+  useEffect(() => {
+    if (!user?.id) return;
+
     const channel = supabaseClient
       .channel("notifications-realtime")
       .on(
@@ -83,6 +103,76 @@ export default function TopNavbar({
             newNotification,
             ...prev,
           ]);
+
+          toast.custom(
+            (t) => (
+              <div
+                className="
+        w-[350px]
+        rounded-2xl
+        border border-white/40
+        bg-white/80
+        backdrop-blur-xl
+        shadow-2xl
+        p-4
+      "
+              >
+                <div className="flex items-start gap-3">
+
+                  <div className="w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center">
+                    <Video size={18} />
+                  </div>
+
+                  <div className="flex-1">
+
+                    <h3 className="font-semibold text-sm text-gray-800">
+                      Meeting Invitation
+                    </h3>
+
+                    <p className="text-xs text-gray-600 mt-1">
+                      <span className="font-medium">
+                        {newNotification.sender_name}
+                      </span>{" "}
+                      invited you to join a meeting.
+                    </p>
+
+                    <div className="mt-2 text-xs text-gray-500">
+                      Meeting ID:
+                      <span className="ml-1 font-medium">
+                        {newNotification.meeting_id}
+                      </span>
+                    </div>
+
+                    <button
+                      className="
+              mt-3
+              flex items-center gap-2
+              px-3 py-1.5
+              rounded-lg
+              bg-primary
+              text-white
+              text-xs
+            "
+                      onClick={() => {
+                        toast.dismiss(t);
+                        router.push(
+                          `/meet?join=${newNotification.meeting_id}`
+                        );
+                      }}
+                    >
+                      Join Now
+                      <ArrowRight size={14} />
+                    </button>
+
+                  </div>
+
+                </div>
+              </div>
+            ),
+            {
+              duration: 10000,
+            }
+          );
         }
       )
       .on(
@@ -230,7 +320,7 @@ export default function TopNavbar({
         open={notifOpen}
         onClose={() => setNotifOpen(false)}
         onJoinMeeting={(meetingId) => {
-         setNotifOpen(false)
+          setNotifOpen(false)
           router.push(`/meet?join=${meetingId}`);
         }}
       />

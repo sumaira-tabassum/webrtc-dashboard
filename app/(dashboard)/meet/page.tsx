@@ -101,8 +101,8 @@ useEffect(() => {
 
   return (
     <div className="space-y-8 px-0 py-4 sm:space-y-10">
-      {/* <div className="space-y-8"></div> */}
-      <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+      {/* <div className="space-y-8"> */}
+      <div className="flex flex-col gap-6 space-y-8 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <h2 className="text-2xl font-bold text-gray-900 sm:text-3xl">Meetings</h2>
           <p className="mt-1 text-gray-500">
@@ -112,8 +112,8 @@ useEffect(() => {
 
         <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
           <Button
-  variant="outline"
-  className="w-full sm:w-auto flex items-center justify-center gap-2 rounded-xl px-4 py-5 font-semibold"
+          variant="outline"
+          className="w-full sm:w-auto flex items-center justify-center gap-2 rounded-xl px-4 py-5 font-semibold"
             onClick={() => setJoinOpen(true)}
             disabled={joining}
           >
@@ -130,6 +130,7 @@ useEffect(() => {
           </Button>
         </div>
       </div>
+      {/* </div> */}
 
       <CreateMeetingModal
         open={open}

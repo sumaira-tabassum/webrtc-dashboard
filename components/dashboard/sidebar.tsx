@@ -12,6 +12,7 @@ import { useUserRole } from "@/lib/hooks/userRole";
 import { usePathname } from "next/navigation";
 import { global } from "styled-jsx/css";
 import { logout } from "@/lib/auth";
+import { LayoutDashboard } from "lucide-react";
 
 export default function Sidebar({
   isOpen,
@@ -57,17 +58,40 @@ export default function Sidebar({
       >
         <div className="flex h-full flex-col p-6">
 
-          <div className="mb-10">
+          <div className="flex gap-3 items-center mb-10">
+
+            <div>
+              <img
+                src="logo.png"
+                alt="Logo"
+                className="w-12 h-12"
+              />
+            </div>
+
+            <div>
             <h1 className="bg-primary bg-clip-text text-2xl font-bold text-transparent">
-              Dashboard
+              WebRTC
             </h1>
 
-            <p className="mt-1 text-xs uppercase tracking-[0.25em] text-gray-500">
+            {/* <p className="mt-1 text-xs uppercase tracking-[0.25em] text-gray-500">
               Admin Console
-            </p>
+            </p> */}
+            </div>
           </div>
 
           <nav className="flex-1 space-y-2">
+
+            {/* Dashboard*/}
+            <Link
+              href="/dashboard"
+              className={`flex items-center gap-3 rounded-xl px-4 py-3 transition ${isActive("/dashboard")
+                ? "bg-primary text-white font-semibold shadow-md"
+                : "text-gray-600 hover:bg-indigo-50 hover:text-indigo-600"
+                }`}
+            >
+              <LayoutDashboard size={20} />
+              Dashboard
+            </Link>
 
             {/* USERS (admin only) */}
             {!loading && role === "admin" && (

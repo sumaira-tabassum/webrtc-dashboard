@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { ChevronDown, Check } from "lucide-react";
 
 type User = {
@@ -20,6 +20,30 @@ export default function UsersMultiSelect({
 }: Props) {
     const [users, setUsers] = useState<User[]>([]);
     const [open, setOpen] = useState(false);
+
+    const ref = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        function handleClickOutside(e: MouseEvent) {
+            if (
+                ref.current &&
+                !ref.current.contains(e.target as Node)
+            ) {
+                setOpen(false);
+            }
+        }
+
+        document.addEventListener(
+            "mousedown",
+            handleClickOutside
+        );
+
+        return () =>
+            document.removeEventListener(
+                "mousedown",
+                handleClickOutside
+            );
+    }, []);
 
     useEffect(() => {
         const fetchUsers = async () => {
@@ -43,7 +67,9 @@ export default function UsersMultiSelect({
     };
 
     return (
-        <div className="relative w-full">
+        <div
+            ref={ref}
+            className=" relative w-full">
 
             {/* Trigger */}
             <button
@@ -60,11 +86,58 @@ export default function UsersMultiSelect({
           "
             >
                 <span className="text-[#4648d4] text-sm font-semibold">
-                    {selectedUsers.length === 0
-                        ? "Select users..."
-                        : selectedUsers.length === 1
-                            ? "1 user selected"
-                            : `${selectedUsers.length} users selected`}
+                    <div className="flex items-center gap-2 overflow-hidden whitespace-nowrap">
+                        {selectedUsers.length === 0 ? (
+                            <span className="text-primary text-sm font-semibold">
+                                Select users...
+                            </span>
+                        ) : (() => {
+                            const selectedUserObjects = users.filter((u) =>
+                                selectedUsers.includes(u.id)
+                            );
+
+                            const visibleUsers = selectedUserObjects.slice(0, 2);
+                            const remainingCount =
+                                selectedUserObjects.length - visibleUsers.length;
+
+                            return (
+                                <div className="flex items-center gap-2 overflow-hidden whitespace-nowrap">
+                                    {visibleUsers.map((user) => (
+                                        <div
+                                            key={user.id}
+                                            className="
+            shrink-0
+            px-3 py-1
+            rounded-full
+            bg-[#F2ECFF]
+            text-primary
+            text-xs
+            font-medium
+          "
+                                        >
+                                            {user.full_name}
+                                        </div>
+                                    ))}
+
+                                    {remainingCount > 0 && (
+                                        <div
+                                            className="
+            shrink-0
+            px-2 py-1
+            rounded-full
+            bg-gray-100
+            text-gray-500
+            text-xs
+            font-medium
+          "
+                                        >
+                                            +{remainingCount}
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        })()}
+                    </div>
                 </span>
 
 
@@ -97,28 +170,44 @@ export default function UsersMultiSelect({
                             type="button"
                             onClick={() => handleToggle(user.id)}
                             className="
-                w-full px-4 py-3
-                flex justify-between items-center
-                hover:bg-[#f4f5ff]
-                transition
-              "
+        w-full px-4 py-3
+        flex items-center
+        hover:bg-[#f4f5ff]
+        transition
+    "
                         >
-                            <div className="text-left">
-                                <p className="text-sm font-medium text-[#131b2e]">
+                            {/* Text section */}
+                            <div className="flex-1 min-w-0 text-left">
+                                <p
+                                    className="
+                text-sm font-medium text-[#131b2e]
+                truncate
+            "
+                                    title={user.full_name}
+                                >
                                     {user.full_name}
                                 </p>
 
-                                <p className="text-xs text-gray-500">
+                                <p
+                                    className="
+                text-xs text-gray-500
+                truncate
+            "
+                                    title={user.email}
+                                >
                                     {user.email}
                                 </p>
                             </div>
 
-                            {selectedUsers.includes(user.id) && (
-                                <Check
-                                    size={18}
-                                    className="text-[#4648d4]"
-                                />
-                            )}
+                            {/* Reserved tick space */}
+                            <div className="w-6 flex justify-end shrink-0">
+                                {selectedUsers.includes(user.id) && (
+                                    <Check
+                                        size={18}
+                                        className="text-green"
+                                    />
+                                )}
+                            </div>
                         </button>
                     ))}
                 </div>

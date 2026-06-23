@@ -1,6 +1,5 @@
 "use client";
 
-import StatsCards from "@/components/dashboard/stats-cards";
 import UsersTable from "@/components/dashboard/users-table";
 import { LayoutDashboard, UserPlus} from "lucide-react";
 import CreateUserModal from "@/components/dashboard/create-user-modal";
@@ -32,8 +31,6 @@ export default function UsersPage() {
           </div>
 
       </div>
-
-      <StatsCards />
 
       <UsersTable />
 

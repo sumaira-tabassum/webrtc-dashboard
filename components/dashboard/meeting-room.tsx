@@ -7,6 +7,7 @@ import { createPeerConnection } from "@/lib/webrtc";
 import RemoteVideo from "@/components/remote-video";
 import { useContext } from "react";
 import { MeetingContext } from "@/app/(dashboard)/layout";
+import { supabaseClient } from "@/lib/supabase/client";
 
 import {
   Mic,
@@ -73,6 +74,30 @@ export default function MeetingRoom({ meetingId, signaling, onLeave }: Props) {
   // const iceQueueRef = useRef<RTCIceCandidateInit[]>([]);
   const iceQueueRef = useRef<Map<string, RTCIceCandidateInit[]>>(new Map());
   // const leavingRef = useRef(false);
+
+  const [user, setUser] = useState<any>(null);
+  const [profile, setProfile] = useState<any>(null);
+  
+      // Fetch user from supabase
+      useEffect(() => {
+          const loadUser = async () => {
+              const { data: { user } } = await supabaseClient.auth.getUser();
+  
+              if (!user) return;
+  
+              setUser(user);
+  
+              const { data: profile } = await supabaseClient
+                  .from("profiles")
+                  .select("role, full_name")
+                  .eq("id", user.id)
+                  .single();
+  
+              setProfile(profile);
+          };
+  
+          loadUser();
+      }, []);
 
   useEffect(() => {
     setInMeeting(true);
@@ -580,7 +605,7 @@ export default function MeetingRoom({ meetingId, signaling, onLeave }: Props) {
           {allParticipants.map(({ peerId, stream }) => (
             <RemoteVideo
               key={peerId}
-              name={peerId === "You" ? "You" : peerId.slice(0, 8)}
+              name={peerId === "You" ? "You" : profile?.full_name}
               stream={stream}
               muted={peerId === "You"}
             />
