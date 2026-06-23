@@ -36,7 +36,7 @@ type PendingOffer = {
 export default function MeetingRoom({ meetingId, signaling, onLeave }: Props) {
 
   const { setInMeeting } = useContext(MeetingContext);
-  
+
   const [seconds, setSeconds] = useState(0);
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
   // const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
@@ -74,13 +74,13 @@ export default function MeetingRoom({ meetingId, signaling, onLeave }: Props) {
   const iceQueueRef = useRef<Map<string, RTCIceCandidateInit[]>>(new Map());
   // const leavingRef = useRef(false);
 
-     useEffect(() => {
-      setInMeeting(true);
-  
-      return () => {
-        setInMeeting(false);
-      };
-    }, [setInMeeting]);
+  useEffect(() => {
+    setInMeeting(true);
+
+    return () => {
+      setInMeeting(false);
+    };
+  }, [setInMeeting]);
 
   useEffect(() => {
     if (localVideoRef.current && localStream) {
@@ -119,15 +119,49 @@ export default function MeetingRoom({ meetingId, signaling, onLeave }: Props) {
     };
 
     const handleParticipants = (participants: string[]) => {
-      // remove self from list
       const others = participants.filter(
         (id) => id !== signaling.odId
       );
 
+      // ----- REMOVE USERS WHO LEFT -----
+      const existingPeers = Array.from(peersRef.current.keys());
+
+      for (const peerId of existingPeers) {
+        if (!others.includes(peerId)) {
+          console.log("Removing departed peer:", peerId);
+
+          // close connection
+          const pc = peersRef.current.get(peerId);
+          pc?.close();
+
+          // remove peer
+          peersRef.current.delete(peerId);
+
+          // remove stream
+          remoteStreamsRef.current.delete(peerId);
+
+          // remove queued ICE candidates
+          iceQueueRef.current.delete(peerId);
+
+          // remove negotiation lock
+          const key = [signaling.odId, peerId]
+            .sort()
+            .join("-");
+
+          negotiationLockRef.current.delete(key);
+        }
+      }
+
+      // update React state
+      setRemoteStreams(new Map(remoteStreamsRef.current));
+
+      // store latest participant list
       participantsRef.current = others;
 
+      // ----- ADD NEW USERS -----
       for (const peerId of others) {
         if (peersRef.current.has(peerId)) continue;
+
         createOrGetPeer(peerId);
       }
     };
@@ -164,12 +198,58 @@ export default function MeetingRoom({ meetingId, signaling, onLeave }: Props) {
 
       const pc = createPeerConnection(stream);
 
+      // safety mechanism if Presence updates arrive late.
+      pc.onconnectionstatechange = () => {
+        console.log(
+          peerId,
+          pc.connectionState
+        );
+
+        if (
+          pc.connectionState === "disconnected" ||
+          pc.connectionState === "failed" ||
+          pc.connectionState === "closed"
+        ) {
+          pc.close();
+
+          peersRef.current.delete(peerId);
+
+          remoteStreamsRef.current.delete(peerId);
+
+          iceQueueRef.current.delete(peerId);
+
+          const key = [signaling.odId, peerId]
+            .sort()
+            .join("-");
+
+          negotiationLockRef.current.delete(key);
+
+          setRemoteStreams(
+            new Map(remoteStreamsRef.current)
+          );
+        }
+      };
+
       pc.ontrack = (event) => {
         const stream =
-          event.streams[0] ?? new MediaStream([event.track]);
+          event.streams[0] ??
+          new MediaStream([event.track]);
 
         remoteStreamsRef.current.set(peerId, stream);
-        setRemoteStreams(new Map(remoteStreamsRef.current));
+
+        setRemoteStreams(
+          new Map(remoteStreamsRef.current)
+        );
+
+        event.track.onended = () => {
+          console.log("Track ended:", peerId);
+
+          remoteStreamsRef.current.delete(peerId);
+
+          setRemoteStreams(
+            new Map(remoteStreamsRef.current)
+          );
+        };
       };
 
       pc.onicecandidate = (event) => {
@@ -184,6 +264,31 @@ export default function MeetingRoom({ meetingId, signaling, onLeave }: Props) {
       if (shouldInitiate(peerId)) {
         initiateOffer(peerId);
       }
+
+      pc.onconnectionstatechange = () => {
+        console.log(
+          peerId,
+          pc.connectionState
+        );
+
+        if (
+          pc.connectionState === "disconnected" ||
+          pc.connectionState === "failed" ||
+          pc.connectionState === "closed"
+        ) {
+          pc.close();
+
+          peersRef.current.delete(peerId);
+
+          remoteStreamsRef.current.delete(peerId);
+
+          setRemoteStreams(
+            new Map(remoteStreamsRef.current)
+          );
+
+          iceQueueRef.current.delete(peerId);
+        }
+      };
 
       return pc;
     };
@@ -324,6 +429,13 @@ export default function MeetingRoom({ meetingId, signaling, onLeave }: Props) {
       // close ALL peer connections (mesh cleanup)
       peersRef.current.forEach((pc) => pc.close());
       peersRef.current.clear();
+
+      remoteStreamsRef.current.clear();
+      setRemoteStreams(new Map());
+
+      participantsRef.current = [];
+
+      negotiationLockRef.current.clear();
 
       // reset refs
       isReadyRef.current = false;
