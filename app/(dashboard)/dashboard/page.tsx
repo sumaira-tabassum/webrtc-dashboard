@@ -30,23 +30,25 @@ export default function DashboardPage() {
         loadUser();
     }, []);
 
-    return (
-        <div className="space-y-8">
+   return (
+  <div className="space-y-8 px-4 py-4 sm:px-6">
+    <div>
+      <h1 className="my-6 text-2xl font-bold text-gray-900 sm:text-3xl">
+        Hello,
+        <span
+          className="ml-2 break-words"
+          title={profile?.full_name}
+        >
+          {profile?.full_name || "User"}
+        </span>
+      </h1>
 
-            <h1 className="text-3xl font-bold text-gray-900 my-6">
-                Hello,
-                <span className="ml-2"
-                    title={profile?.full_name}>
-                    {profile?.full_name || "User"}
-                </span>
-            </h1>
+      <p className="text-sm text-gray-500 sm:text-base">
+        Welcome Back!
+      </p>
+    </div>
 
-            <p className="text-gray-500">
-                Welcome Back!
-            </p>
-
-            <StatsCards />
-
-        </div>
-    );
+    <StatsCards />
+  </div>
+);
 }

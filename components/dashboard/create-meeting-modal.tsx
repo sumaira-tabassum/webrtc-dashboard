@@ -106,34 +106,32 @@ export default function CreateMeetingModal({ open, onOpenChange, onStartMeeting 
       console.error("Copy failed:", err);
     }
   };
-  return (
+   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
 
         <DialogContent
           className="
-          fixed left-[50%] top-[50%]
-          z-50
-          w-full max-w-[540px]
-          translate-x-[-50%] translate-y-[-50%]
-          p-0
-          overflow-visible
-          rounded-xl
-          bg-white
-          backdrop-blur-xl
-          border border-white/50
-          shadow-[0_20px_50px_-12px_rgba(99,102,241,0.15)]
-        "
+w-[90vw]
+max-w-[540px]
+p-0
+overflow-visible
+rounded-xl
+bg-white/70
+backdrop-blur-xl
+border border-white/50
+shadow-[0_20px_50px_-12px_rgba(99,102,241,0.15)]
+"
         >
           {/* Glow orbs (Stitch depth layer) */}
-          <div className="pointer-events-none absolute -bottom-20 -right-20 w-96 h-96 bg-[#4648d4]/10 blur-[100px] rounded-full" />
-          <div className="pointer-events-none absolute -top-20 -left-20 w-96 h-96 bg-[#8127cf]/10 blur-[100px] rounded-full" />
+          {/* <div className="pointer-events-none absolute -bottom-20 -right-20 w-96 h-96 bg-[#4648d4]/10 blur-[100px] rounded-full" />
+          <div className="pointer-events-none absolute -top-20 -left-20 w-96 h-96 bg-[#8127cf]/10 blur-[100px] rounded-full" /> */}
 
           {/* CARD */}
           <div className="relative">
 
             {/* HEADER */}
-            <div className="px-10 pt-10 pb-6 space-y-1">
+            <div className="px-5 pt-8 pb-6 space-y-1 sm:px-10 sm:pt-10">
               <h2 className="text-2xl font-semibold text-[#131b2e]">
                 Create Meeting
               </h2>
@@ -143,7 +141,7 @@ export default function CreateMeetingModal({ open, onOpenChange, onStartMeeting 
             </div>
 
             {/* BODY */}
-            <div className="px-10 space-y-6">
+            <div className="px-5 space-y-6 sm:px-10">
 
               {/* Meeting ID */}
               <div className="space-y-2">
@@ -216,13 +214,15 @@ export default function CreateMeetingModal({ open, onOpenChange, onStartMeeting 
                     }
                     type="button"
                     onClick={handleInvite}
-                    className="
-                    h-12 px-4
+                   className="
+                    h-12
+                    px-4
                     rounded-xl
                     bg-white/20
                     border border-white/50
                     text-primary
-                    hover:bg-white/40"
+                    hover:bg-white/40
+                  "
                   >
                     {inviteSent ? (
                       <>
@@ -260,7 +260,14 @@ export default function CreateMeetingModal({ open, onOpenChange, onStartMeeting 
             </div>
 
             {/* FOOTER */}
-            <div className="px-10 py-6 mt-6 flex justify-end gap-4 bg-[#f2f3ff]">
+            <div className="
+px-5 py-6
+flex flex-col gap-3
+sm:px-10
+sm:flex-row
+sm:justify-end
+sm:gap-4
+">
 
               <Button
                 type="button"
@@ -271,6 +278,7 @@ export default function CreateMeetingModal({ open, onOpenChange, onStartMeeting 
                             text-[#464554]
                             border-[#c7c4d7]
                             hover:bg-[#dae2fd]
+                            h-11 w-full sm:w-auto
                         "
               >
                 Cancel
@@ -282,6 +290,7 @@ export default function CreateMeetingModal({ open, onOpenChange, onStartMeeting 
                 text-white
                 bg-primary
                 hover:shadow-lg hover:shadow-[#4648d4]/30
+                h-11 w-full sm:w-auto
               "
                 onClick={() => {
                   const id = meetingId;

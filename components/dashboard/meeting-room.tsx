@@ -77,6 +77,20 @@ export default function MeetingRoom({ meetingId, signaling, onLeave }: Props) {
 
   const [user, setUser] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
+
+  const [isMobile, setIsMobile] = useState(false);
+
+useEffect(() => {
+  const update = () => {
+    setIsMobile(window.innerWidth < 640);
+  };
+
+  update();
+
+  window.addEventListener("resize", update);
+
+  return () => window.removeEventListener("resize", update);
+}, []);
   
       // Fetch user from supabase
       useEffect(() => {
@@ -545,27 +559,56 @@ export default function MeetingRoom({ meetingId, signaling, onLeave }: Props) {
 
   const participantCount = allParticipants.length;
 
-  const layouts: Record<number, { cols: number }> = {
-    1: { cols: 1 },
-    2: { cols: 2 },
-    3: { cols: 3 },
-    4: { cols: 4 },
-    5: { cols: 5 },
-    6: { cols: 3 },
-  };
+const desktopLayouts: Record<number, number> = {
+  1: 1,
+  2: 2,
+  3: 3,
+  4: 4,
+  5: 5,
+  6: 3,
+};
 
-  const cols =
-    layouts[participantCount]?.cols ?? 3;
+const mobileLayouts: Record<number, number> = {
+  1: 1, // 1×1
+  2: 1, // 1 column, 2 rows
+  3: 1, // 1 column, 3 rows
+  4: 2, // 2×2
+  5: 2, // 2 columns, 3 rows
+  6: 2, // 2 columns, 3 rows
+};
+
+ const cols = isMobile
+  ? mobileLayouts[participantCount] ?? 2
+  : desktopLayouts[participantCount] ?? 3;
 
   return (
     <div className="group relative w-full min-h-[calc(100dvh-5rem)] bg-[#0c0d12] overflow-hidden text-white">
 
-      <header className="absolute top-0 left-0 z-50 flex w-full flex-col gap-3 border-b border-white/10 bg-white/10 px-4 py-3 backdrop-blur-md sm:flex-row sm:items-center sm:justify-between sm:px-6 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
-        <div className="flex items-center gap-2 text-xs text-white/60">
+      <header
+  className="
+    absolute top-0 left-0 z-50
+    flex w-full flex-col gap-3
+    border-b border-white/10
+    bg-white/10
+    px-4 py-3
+    backdrop-blur-md
 
+    sm:flex-row
+    sm:items-center
+    sm:justify-between
+    sm:px-6
+
+    opacity-100
+    md:opacity-0
+    transition-opacity
+    duration-300
+    md:group-hover:opacity-100
+  "
+>
+        <div className="flex flex-wrap items-center gap-2 text-xs text-white/60">
 
           <span className="text-white/70 text-sm font-medium">
-            ID: <span className="font-mono text-white/70 break-all">
+            ID: <span className="font-mono text-white/70 break-all text-xs sm:text-sm">
               {meetingId}
             </span>
           </span>
@@ -595,7 +638,7 @@ export default function MeetingRoom({ meetingId, signaling, onLeave }: Props) {
         </div>
       </header>
 
-      <div className="absolute inset-0 p-4 pt-18 pb-18">
+      <div className="absolute inset-0 p-2 pt-20 pb-24 sm:p-4 sm:pt-18 sm:pb-18">
         <div
           className="grid h-full w-full gap-4"
           style={{
@@ -631,16 +674,18 @@ export default function MeetingRoom({ meetingId, signaling, onLeave }: Props) {
     py-2
     backdrop-blur-xl
     shadow-2xl
+    max-w-[95vw]
 
     sm:bottom-8
     sm:gap-6
     sm:px-6
     sm:py-3
 
-    opacity-0 
-    transition-opacity 
-    duration-300 
-    group-hover:opacity-100
+    opacity-100
+md:opacity-0
+transition-opacity
+duration-300
+md:group-hover:opacity-100
   "
       >
         {/* AUDIO */}
@@ -690,7 +735,7 @@ export default function MeetingRoom({ meetingId, signaling, onLeave }: Props) {
         </button> */}
 
         {/* DIVIDER */}
-        <div className="w-[1px] h-8 bg-white/20 mx-1" />
+        <div className="mx-1 h-8 w-px bg-white/20" />
 
         {/* END CALL */}
         <button onClick={handleLeave} className="group flex flex-col items-center gap-1">

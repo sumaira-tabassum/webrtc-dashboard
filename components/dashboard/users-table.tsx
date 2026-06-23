@@ -77,43 +77,54 @@ export default function UsersTable() {
   };
 
 
-  return (
-    <div className="rounded-2xl overflow-hidden border border-white/40 bg-white/70 backdrop-blur-xl shadow-xl">
+ return (
+  <div className="overflow-hidden rounded-2xl border border-white/40 bg-white/70 shadow-xl backdrop-blur-xl">
+    {/* FILTERS */}
+    <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/20 bg-white/20 p-4">
+      <div className="flex flex-wrap gap-2">
+        <button
+          onClick={() => setFilter("all")}
+          className={`rounded-full px-4 py-1.5 text-sm font-medium transition ${
+            filter === "all"
+              ? "bg-primary text-white"
+              : "text-gray-600 hover:bg-white/50"
+          }`}
+        >
+          All
+        </button>
 
-      <div className="p-4 border-b border-white/20 flex justify-between items-center bg-white/20">
-        <div className="flex gap-2">
-          <button onClick={() => setFilter("all")}
-            className={`px-4 py-1.5 rounded-full text-sm font-medium transition ${filter === "all"
+        <button
+          onClick={() => setFilter("admin")}
+          className={`rounded-full px-4 py-1.5 text-sm font-medium transition ${
+            filter === "admin"
               ? "bg-primary text-white"
-              : "hover:bg-white/50 text-gray-600"
-              }`}>
-            All
-          </button>
-          <button onClick={() => setFilter("admin")}
-            className={`px-4 py-1.5 rounded-full text-sm font-medium transition ${filter === "admin"
+              : "text-gray-600 hover:bg-white/50"
+          }`}
+        >
+          Admins
+        </button>
+
+        <button
+          onClick={() => setFilter("user")}
+          className={`rounded-full px-4 py-1.5 text-sm font-medium transition ${
+            filter === "user"
               ? "bg-primary text-white"
-              : "hover:bg-white/50 text-gray-600"
-              }`}>
-            Admins
-          </button>
-          <button onClick={() => setFilter("user")}
-            className={`px-4 py-1.5 rounded-full text-sm font-medium transition ${filter === "user"
-              ? "bg-primary text-white"
-              : "hover:bg-white/50 text-gray-600"
-              }`}>
-            Users
-          </button>
-        </div>
+              : "text-gray-600 hover:bg-white/50"
+          }`}
+        >
+          Users
+        </button>
       </div>
+    </div>
 
-      {/* TABLE */}
-      <table className="w-full text-left border-collapse">
+    {/* TABLE */}
+    <div className="overflow-x-auto">
+      <table className="w-full min-w-[700px] border-collapse text-left">
         <thead>
-          <tr className="text-xs uppercase tracking-widest text-gray-500 border-b">
+          <tr className="border-b text-xs uppercase tracking-widest text-gray-500">
             <th className="px-6 py-4">Name & Email</th>
             <th className="px-6 py-4">Role</th>
             <th className="px-6 py-4">Status</th>
-            {/* <th className="px-6 py-4">Last Active</th> */}
             <th className="px-6 py-4 text-right">Actions</th>
           </tr>
         </thead>
@@ -121,37 +132,35 @@ export default function UsersTable() {
         <tbody className="divide-y divide-gray-100">
           {filteredUsers.map((u) => (
             <tr
-
               key={u.id}
-              className="hover:bg-white/50 transition group"
+              className="group transition hover:bg-white/50"
             >
               {/* USER */}
               <td className="px-6 py-4">
                 <div className="flex items-center gap-3">
-
-                  {/* Avatar (fallback initial) */}
-                  <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-white font-bold">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary font-bold text-white">
                     {u.email?.[0]?.toUpperCase()}
                   </div>
 
-                  <div>
+                  <div className="min-w-0">
                     <p className="font-medium text-gray-900">
                       {u.full_name || "No Name"}
                     </p>
-                    <p className="text-sm text-gray-500">
+
+                    <p className="truncate text-sm text-gray-500">
                       {u.email}
                     </p>
                   </div>
-
                 </div>
               </td>
 
               {/* ROLE */}
               <td className="px-6 py-4">
-                <span className={`px-3 py-1 rounded-full text-xs font-semibold uppercase
-                  ${u.role === "admin"
-                    ? "bg-purple-100 text-primary"
-                    : "bg-gray-100 text-gray-600"
+                <span
+                  className={`rounded-full px-3 py-1 text-xs font-semibold uppercase ${
+                    u.role === "admin"
+                      ? "bg-purple-100 text-primary"
+                      : "bg-gray-100 text-gray-600"
                   }`}
                 >
                   {u.role}
@@ -162,11 +171,13 @@ export default function UsersTable() {
               <td className="px-6 py-4">
                 <div className="flex items-center gap-2">
                   <span
-                    className={`w-2 h-2 rounded-full ${u.status === "active"
-                      ? "bg-green-500"
-                      : "bg-gray-400"
-                      }`}
+                    className={`h-2 w-2 rounded-full ${
+                      u.status === "active"
+                        ? "bg-green-500"
+                        : "bg-gray-400"
+                    }`}
                   />
+
                   <span className="text-sm text-gray-600">
                     {u.status}
                   </span>
@@ -175,51 +186,46 @@ export default function UsersTable() {
 
               {/* ACTIONS */}
               <td className="px-6 py-4 text-right">
-                <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition">
-
-                  <button className="p-2 hover:bg-purple-50 text-primary rounded-lg"
+                <div className="flex justify-end gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition">
+                  <button
+                    className="rounded-lg p-2 text-primary hover:bg-purple-50"
                     onClick={() => {
                       setSelectedUser(u);
                       setEditOpen(true);
-                    }}>
+                    }}
+                  >
                     <Edit size={18} />
                   </button>
 
                   <button
                     onClick={() => handleDelete(u.id)}
                     disabled={deletingId === u.id}
-                    className="p-2 rounded-lg text-red-600 hover:bg-red-50 disabled:opacity-50 transition"
+                    className="rounded-lg p-2 text-red-600 transition hover:bg-red-50 disabled:opacity-50"
                     title="Delete user"
                   >
                     <Trash2 size={18} />
                   </button>
-
                 </div>
               </td>
             </tr>
           ))}
         </tbody>
       </table>
-
-      {/* FOOTER */}
-      <div className="p-4 border-t border-white/20 flex justify-between items-center bg-white/10">
-        <p className="text-sm text-gray-500">
-          Showing {filteredUsers.length} out of {users.length} users.
-        </p>
-
-        {/* <div className="flex gap-2">
-          <button className="px-3 py-1 rounded border text-gray-500">1</button>
-          <button className="px-3 py-1 rounded border hover:bg-white/50">2</button>
-        </div> */}
-      </div>
-
-      <EditUserModal
-        open={editOpen}
-        onOpenChange={setEditOpen}
-        user={selectedUser}
-        onUpdated={() => router.refresh()}
-      />
-
     </div>
-  );
+
+    {/* FOOTER */}
+    <div className="flex flex-col gap-3 border-t border-white/20 bg-white/10 p-4 sm:flex-row sm:items-center sm:justify-between">
+      <p className="text-sm text-gray-500">
+        Showing {filteredUsers.length} out of {users.length} users.
+      </p>
+    </div>
+
+    <EditUserModal
+      open={editOpen}
+      onOpenChange={setEditOpen}
+      user={selectedUser}
+      onUpdated={() => router.refresh()}
+    />
+  </div>
+);
 }

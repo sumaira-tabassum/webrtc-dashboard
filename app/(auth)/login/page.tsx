@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Mail, Lock, User } from "lucide-react";
+import { Mail, Lock, User, Loader2 } from "lucide-react";
 import { login } from "@/lib/auth";
 import { supabaseClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
@@ -12,11 +12,15 @@ export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    const { data, error } = await supabaseClient.auth.signInWithPassword({
+    setLoading(true);
+
+    try{
+        const { data, error } = await supabaseClient.auth.signInWithPassword({
       email,
       password,
     });
@@ -45,19 +49,32 @@ export default function LoginPage() {
       console.log("PROFILE ERROR:"+ profileError.message);
       return;
     }
-
     if (profile?.role === "admin") {
       router.replace("/users");
     } else {
       router.replace("/meet");
     }
+    }
+    finally{
+      setLoading(false);
+    }
+    
   };
 
   return (
     <main className="min-h-screen flex">
 
       {/* LEFT SIDE */}
-      <section className="hidden md:flex w-1/2 relative overflow-hidden bg-gradient-to-br from-indigo-50 via-white to-purple-50 p-12 flex-col justify-between">
+      <section
+  className="
+    hidden md:flex
+    md:w-1/2
+    relative overflow-hidden
+    bg-gradient-to-br from-primary/15 via-white to-secondary/15
+    p-8 lg:p-12
+    flex-col justify-between
+  "
+>
 
         {/* decorative blobs */}
         <div className="absolute w-[500px] h-[500px] bg-gradient-to-r from-indigo-400 to-purple-500 blur-[120px] opacity-20 rounded-full top-[-10%] left-[-10%]" />
@@ -69,10 +86,10 @@ export default function LoginPage() {
         </div>
 
         <div className="relative z-10 max-w-md">
-          <h1 className="text-4xl font-bold text-gray-900 leading-tight">
+          <h1 className="text-3xl lg:text-4xl font-bold text-gray-900 leading-tight">
             Seamless video collaboration in real time
           </h1>
-          <p className="mt-4 text-gray-600 text-lg">
+          <p className="mt-4 text-base lg:text-lg text-gray-600">
             Connect, communicate, and create with high-fidelity WebRTC technology built for modern teams.
           </p>
         </div>
@@ -90,16 +107,34 @@ export default function LoginPage() {
       </section>
 
       {/* RIGHT SIDE */}
-      <section className="w-full md:w-1/2 flex items-center justify-center bg-white p-6">
+      <section
+  className="
+    w-full md:w-1/2
+    flex items-center justify-center
+    bg-white
+    px-4 py-6
+    sm:px-6
+  "
+>
 
-        <div className="w-full max-w-md rounded-2xl border shadow-xl p-8 bg-white">
+        <div
+  className="
+    w-full
+    max-w-md
+    rounded-2xl
+    border
+    bg-white
+    p-6 sm:p-8
+    shadow-xl
+  "
+>
 
           {/* header */}
           <div className="mb-6">
-            <h2 className="text-2xl font-semibold text-gray-900">
+            <h2 className="text-xl sm:text-2xl font-semibold text-gray-900">
               Welcome Back
             </h2>
-            <p className="text-gray-500 mt-1">
+            <p className="mt-1 text-sm sm:text-base text-gray-500">
               Sign in to continue to your workspace
             </p>
           </div>
@@ -138,17 +173,26 @@ export default function LoginPage() {
 
             {/* button */}
             <Button
+            disabled={loading}
               type="submit"
               className="
-    w-full
-    h-11
-    border-primary
-    text-white
-    bg-primary
-    transition-colors
-  "
+w-full
+h-12
+bg-primary
+text-white
+border-primary
+transition-colors
+"
             >
-              Sign In
+              {loading? (
+                <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Signing In...
+                </>
+              ):(
+                "Sign In"
+              )}
+              
             </Button>
 
             {/* divider */}

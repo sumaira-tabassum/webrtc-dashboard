@@ -40,7 +40,7 @@ export default function Sidebar({
 
       <aside
         className={`
-        fixed left-0 top-0 z-50 h-screen w-[80vw] max-w-64
+        fixed left-0 top-0 z-50 h-full w-[80vw] max-w-64
         border-r border-white/30
         bg-white/70 backdrop-blur-xl shadow-xl
         transition-transform duration-300

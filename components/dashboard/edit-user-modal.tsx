@@ -92,137 +92,147 @@ export default function EditUserModal({
     }
   };
 
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent
-        className="
-          max-w-[540px]
-          p-0
-          overflow-hidden
-          rounded-xl
-          bg-white/70
-          backdrop-blur-xl
-          border border-white/50
-          shadow-[0_20px_50px_-12px_rgba(99,102,241,0.15)]
-        "
+ return (
+  <Dialog open={open} onOpenChange={onOpenChange}>
+    <DialogContent
+      className="
+        w-[90vw]
+        max-w-[540px]
+        p-0
+        overflow-hidden
+        rounded-xl
+        bg-white/70
+        backdrop-blur-xl
+        border border-white/50
+        shadow-[0_20px_50px_-12px_rgba(99,102,241,0.15)]
+      "
+    >
+      {/* HEADER */}
+      <DialogHeader className="px-5 pt-8 pb-5 sm:px-8">
+        <DialogTitle className="text-xl sm:text-2xl font-semibold text-[#131b2e]">
+          Edit User
+        </DialogTitle>
+
+        <DialogDescription className="mt-1 text-sm text-[#464554]">
+          Update member details and permissions
+        </DialogDescription>
+      </DialogHeader>
+
+      {/* FORM */}
+      <form
+        onSubmit={handleSubmit}
+        className="space-y-5 px-5 pb-6 sm:px-8"
       >
-        {/* HEADER */}
-        <DialogHeader className="px-8 pt-8 pb-5">
-          <DialogTitle className="text-2xl font-semibold text-[#131b2e]">
-            Edit User
-          </DialogTitle>
+        {/* Full Name */}
+        <div className="space-y-2">
+          <Label>Full Name</Label>
+          <Input
+            value={fullName}
+            onChange={(e) => setFullName(e.target.value)}
+            className="
+              h-12
+              bg-white/50
+              border border-outline-variant
+              focus-visible:ring-2 focus-visible:ring-[#4648d4]/20
+            "
+          />
+        </div>
 
-          <DialogDescription className="text-sm text-[#464554] mt-1">
-            Update member details and permissions
-          </DialogDescription>
-        </DialogHeader>
+        {/* Email */}
+        <div className="space-y-2">
+          <Label>Email</Label>
+          <Input
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="
+              h-12
+              bg-white/50
+              border border-outline-variant
+              focus-visible:ring-2 focus-visible:ring-[#4648d4]/20
+            "
+          />
+        </div>
 
-        {/* FORM */}
-        <form onSubmit={handleSubmit} className="px-8 pb-6 space-y-5">
-
-          {/* Full Name */}
+        {/* Role + Status */}
+        <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label>Full Name</Label>
-            <Input
-              value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
-              className="
-                bg-white/50
-                border border-outline-variant
-                focus-visible:ring-2 focus-visible:ring-[#4648d4]/20
-              "
-            />
+            <Label>Role</Label>
+
+            <Select value={role} onValueChange={setRole}>
+              <SelectTrigger
+                className="
+                  h-12
+                  bg-white/50
+                  border border-outline-variant
+                "
+              >
+                <SelectValue />
+              </SelectTrigger>
+
+              <SelectContent className="z-[200]">
+                <SelectItem value="user">User</SelectItem>
+                <SelectItem value="admin">Admin</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
-          {/* Email */}
           <div className="space-y-2">
-            <Label>Email</Label>
-            <Input
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="
-                bg-white/50
-                border border-outline-variant
-                focus-visible:ring-2 focus-visible:ring-[#4648d4]/20
-              "
-            />
+            <Label>Status</Label>
+
+            <Select value={status} onValueChange={setStatus}>
+              <SelectTrigger
+                className="
+                  h-12
+                  bg-white/50
+                  border border-outline-variant
+                "
+              >
+                <SelectValue />
+              </SelectTrigger>
+
+              <SelectContent className="z-[200]">
+                <SelectItem value="active">Active</SelectItem>
+                <SelectItem value="inactive">Inactive</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
+        </div>
 
-          {/* Role + Status */}
-          <div className="grid grid-cols-2 gap-4">
+        {/* FOOTER */}
+        <div className="flex flex-col gap-3 border-t border-white/30 pt-4 sm:flex-row sm:justify-end">
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={() => onOpenChange(false)}
+            className="
+              h-11
+              w-full
+              rounded-xl
+              text-[#464554]
+              border-[#c7c4d7]
+              hover:bg-[#dae2fd]
+              sm:w-auto
+            "
+          >
+            Cancel
+          </Button>
 
-            <div className="space-y-2">
-              <Label>Role</Label>
-              <Select value={role} onValueChange={setRole}>
-                <SelectTrigger
-                  className="
-                    bg-white/50
-                    border border-outline-variant
-                  "
-                >
-                  <SelectValue />
-                </SelectTrigger>
-
-                <SelectContent className="z-[200]">
-                  <SelectItem value="user">User</SelectItem>
-                  <SelectItem value="admin">Admin</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Status</Label>
-              <Select value={status} onValueChange={setStatus}>
-                <SelectTrigger
-                  className="
-                    bg-white/50
-                    border border-outline-variant
-                  "
-                >
-                  <SelectValue />
-                </SelectTrigger>
-
-                <SelectContent className="z-[200]">
-                  <SelectItem value="active">Active</SelectItem>
-                  <SelectItem value="inactive">Inactive</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-          </div>
-
-          {/* FOOTER */}
-          <div className="flex justify-end gap-3 pt-4 border-t border-white/30">
-
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={() => onOpenChange(false)}
-              className="
-                            rounded-xl
-                            text-[#464554]
-                            border-[#c7c4d7]
-                            hover:bg-[#dae2fd]
-                        "
-            >
-              Cancel
-            </Button>
-
-            <Button
-              disabled={loading}
-              className="
-                bg-primary
-                text-white
-                hover:shadow-lg hover:shadow-[#4648d4]/30
-              "
-            >
-              {loading ? "Updating..." : "Update User"}
-            </Button>
-
-          </div>
-
-        </form>
-      </DialogContent>
-    </Dialog>
-  );
+          <Button
+            disabled={loading}
+            className="
+              h-11
+              w-full
+              bg-primary
+              text-white
+              hover:shadow-lg hover:shadow-[#4648d4]/30
+              sm:w-auto
+            "
+          >
+            {loading ? "Updating..." : "Update User"}
+          </Button>
+        </div>
+      </form>
+    </DialogContent>
+  </Dialog>
+);
 }
