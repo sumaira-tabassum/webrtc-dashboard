@@ -4,12 +4,13 @@ import type { RealtimeChannel } from "@supabase/supabase-js";
 const MAX_PARTICIPANTS = 6;
 const JOIN_TIMEOUT_MS = 5000;
 
-// type Role = "host" | "guest";
+export type ParticipantType = "user" | "guest";
 
-//info about user
-type PresenceMeta = {
-  // role: Role;
+export type ParticipantMeta = {
   odId: string;
+  displayName: string;
+  participantType: ParticipantType;
+  userId?: string;
 };
 
 type OfferPayload = {
@@ -30,26 +31,51 @@ type IcePayload = {
   to: string;
 };
 
+type MeetingSignalingOptions = {
+  displayName?: string;
+  participantType?: ParticipantType;
+  userId?: string;
+};
+
 export class MeetingSignaling {
-  private channel: RealtimeChannel | null = null; //Stores current Supabase room.
-  private roomId: string | null = null;         //meeting id
-  readonly odId: string;                        //unique browser identifier
+  private channel: RealtimeChannel | null = null;
+  private roomId: string | null = null;
+
+  readonly odId: string;
+
+  private displayName: string;
+  private participantType: ParticipantType;
+  private userId?: string;
 
   private onOffer?: (payload: OfferPayload) => void;
   private onAnswer?: (payload: AnswerPayload) => void;
   private onIce?: (payload: IcePayload) => void;
+  private onParticipants?: (participants: ParticipantMeta[]) => void;
 
-  private onParticipants?: (participants: string[]) => void;
-  // private onRoomUsers?: (count: number) => void;
-
-  // Every browser tab gets its own unique ID.
-  constructor() {
-    this.odId = crypto.randomUUID();    //browser API 
+  constructor(options: MeetingSignalingOptions = {}) {
+    this.odId = crypto.randomUUID();
+    this.displayName = options.displayName?.trim() || "Participant";
+    this.participantType = options.participantType ?? "user";
+    this.userId = options.userId;
   }
 
-  // helper function
+  setParticipant(options: MeetingSignalingOptions) {
+    this.displayName = options.displayName?.trim() || this.displayName;
+    this.participantType = options.participantType ?? this.participantType;
+    this.userId = options.userId ?? this.userId;
+  }
+
   private channelName(roomId: string) {
     return `meeting:${roomId}`;
+  }
+
+  private presenceMeta(): ParticipantMeta {
+    return {
+      odId: this.odId,
+      displayName: this.displayName,
+      participantType: this.participantType,
+      ...(this.userId ? { userId: this.userId } : {}),
+    };
   }
 
   private countParticipants(ch?: RealtimeChannel): number {
@@ -57,13 +83,14 @@ export class MeetingSignaling {
     if (!channel) return 0;
 
     const state = channel.presenceState();
-    return Object.values(state).reduce((n, presences) => {        //get only values, not keys
+
+    return Object.values(state).reduce((count, presences) => {
       const list = Array.isArray(presences) ? presences : [presences];
-      return n + list.length;
+      return count + list.length;
     }, 0);
   }
 
-  private getParticipants(ch?: RealtimeChannel): string[] {
+  private getParticipants(ch?: RealtimeChannel): ParticipantMeta[] {
     const channel = ch ?? this.channel;
     if (!channel) return [];
 
@@ -71,28 +98,44 @@ export class MeetingSignaling {
 
     const participants = Object.values(state)
       .flat()
-      .map((p) => (p as unknown as PresenceMeta).odId)
-      .filter(Boolean);
+      .map((presence) => presence as unknown as Partial<ParticipantMeta>)
+      .filter((presence): presence is ParticipantMeta => {
+        return Boolean(presence.odId);
+      });
 
-    return [...new Set(participants)];
+    const uniqueParticipants = new Map<string, ParticipantMeta>();
+
+    for (const participant of participants) {
+      uniqueParticipants.set(participant.odId, {
+        odId: participant.odId,
+        displayName: participant.displayName || "Participant",
+        participantType: participant.participantType || "guest",
+        userId: participant.userId,
+      });
+    }
+
+    return Array.from(uniqueParticipants.values());
   }
 
   private setupBroadcastHandlers(channel: RealtimeChannel) {
     channel
       .on("broadcast", { event: "offer" }, ({ payload }) => {
-        const data = payload as { offer: RTCSessionDescriptionInit; from: string; to: string };
-        // if (data.from === this.odId) return;
+        const data = payload as OfferPayload;
+
         if (data.to !== this.odId) return;
+
         this.onOffer?.({
           offer: data.offer,
           from: data.from,
-          to: data.to
+          to: data.to,
         });
       })
       .on("broadcast", { event: "answer" }, ({ payload }) => {
-        const data = payload as { answer: RTCSessionDescriptionInit; from: string; to: string };
+        const data = payload as AnswerPayload;
+
         if (data.from === this.odId) return;
         if (data.to !== this.odId) return;
+
         this.onAnswer?.({
           answer: data.answer,
           from: data.from,
@@ -100,9 +143,11 @@ export class MeetingSignaling {
         });
       })
       .on("broadcast", { event: "ice-candidate" }, ({ payload }) => {
-        const data = payload as { candidate: RTCIceCandidateInit; from: string; to: string };
+        const data = payload as IcePayload;
+
         if (data.from === this.odId) return;
         if (data.to !== this.odId) return;
+
         this.onIce?.({
           candidate: data.candidate,
           from: data.from,
@@ -114,7 +159,6 @@ export class MeetingSignaling {
   private setupPresenceHandler(channel: RealtimeChannel) {
     channel.on("presence", { event: "sync" }, () => {
       const participants = this.getParticipants(channel);
-
       this.onParticipants?.(participants);
     });
   }
@@ -125,19 +169,24 @@ export class MeetingSignaling {
   ): Promise<void> {
     this.channel = channel;
     this.roomId = roomId;
+
     this.setupBroadcastHandlers(channel);
     this.setupPresenceHandler(channel);
 
     await new Promise<void>((resolve, reject) => {
       channel.subscribe(async (status) => {
         if (status === "SUBSCRIBED") {
-          const trackResult = await channel.track({ odId: this.odId });
+          const trackResult = await channel.track(this.presenceMeta());
+
           if (trackResult === "error") {
             reject(new Error("Failed to join room"));
             return;
           }
+
           resolve();
-        } else if (status === "CHANNEL_ERROR") {
+        }
+
+        if (status === "CHANNEL_ERROR") {
           reject(new Error("Failed to connect to room"));
         }
       });
@@ -176,6 +225,7 @@ export class MeetingSignaling {
 
       const settle = (result: { ok: boolean; error?: string }) => {
         if (settled) return;
+
         settled = true;
         clearTimeout(timer);
         resolve(result);
@@ -191,10 +241,8 @@ export class MeetingSignaling {
         if (settled) return;
 
         const count = this.countParticipants(channel);
-        if (count === 0) return;
 
-        // const hostPresent = this.hasHost(channel);
-        // if (!hostPresent) return;
+        if (count === 0) return;
 
         if (count >= MAX_PARTICIPANTS) {
           void channel.unsubscribe();
@@ -203,18 +251,17 @@ export class MeetingSignaling {
           return;
         }
 
-        void channel
-          .track({odId: this.odId })
-          .then((status) => {
-            if (status === "error") {
-              void channel.unsubscribe();
-              supabaseClient.removeChannel(channel);
-              settle({ ok: false, error: "Failed to join room" });
-              return;
-            }
-            this.channel = channel;
-            settle({ ok: true });
-          });
+        void channel.track(this.presenceMeta()).then((status) => {
+          if (status === "error") {
+            void channel.unsubscribe();
+            supabaseClient.removeChannel(channel);
+            settle({ ok: false, error: "Failed to join room" });
+            return;
+          }
+
+          this.channel = channel;
+          settle({ ok: true });
+        });
       });
 
       channel.subscribe((status) => {
@@ -225,7 +272,6 @@ export class MeetingSignaling {
     });
   }
 
-  /** Re-check presence when entering the meeting view (handles race after join). */
   syncRoomUsers(): void {
     const participants = this.getParticipants();
     this.onParticipants?.(participants);
@@ -235,7 +281,7 @@ export class MeetingSignaling {
     onOffer?: (payload: OfferPayload) => void;
     onAnswer?: (payload: AnswerPayload) => void;
     onIce?: (payload: IcePayload) => void;
-    onParticipants?: (participants: string[]) => void;
+    onParticipants?: (participants: ParticipantMeta[]) => void;
   }) {
     this.onOffer = handlers.onOffer;
     this.onAnswer = handlers.onAnswer;

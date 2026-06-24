@@ -204,15 +204,28 @@ export default function EditUserModal({
             type="button"
             variant="ghost"
             onClick={() => onOpenChange(false)}
-            className="
-              h-11
-              w-full
-              rounded-xl
-              text-[#464554]
-              border-[#c7c4d7]
-              hover:bg-[#dae2fd]
-              sm:w-auto
-            "
+           className="
+  h-11
+  w-full
+  sm:w-auto
+  rounded-xl
+
+  text-[#464554]
+  border border-[#c7c4d7]
+
+  bg-white/40
+  backdrop-blur-md
+
+  transition-all duration-200 ease-out
+
+  hover:text-primary
+  hover:border-primary/30
+
+  hover:-translate-y-[2px]
+
+  active:translate-y-0
+  active:scale-[0.98]
+"
           >
             Cancel
           </Button>

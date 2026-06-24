@@ -1,277 +1,298 @@
 "use client";
 
-import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-    DialogDescription,
-} from "@/components/ui/dialog";
+import { useEffect, useState } from "react";
+import { Check, Copy, Info, Lock, UserPlus } from "lucide-react";
 
-import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-
-import { User } from "lucide-react";
-
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select";
-
-import { Label } from "@/components/ui/label";
-
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-
-import { X } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import UsersMultiSelect from "./users-multi-select";
+import { supabaseClient } from "@/lib/supabase/client";
 
 type Props = {
-    open: boolean;
-    onOpenChange: (open: boolean) => void;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onStartMeeting?: (meetingId: string) => void;
 };
 
-export default function CreateUserModal({ open, onOpenChange }: Props) {
+function generateMeetingId() {
+  return `lum-${Math.random().toString(36).slice(2, 6)}-${Math.random()
+    .toString(36)
+    .slice(2, 5)}`;
+}
 
-    const router = useRouter();
+export default function CreateMeetingModal({
+  open,
+  onOpenChange,
+  onStartMeeting,
+}: Props) {
+  const [meetingId, setMeetingId] = useState(generateMeetingId());
+  const [copied, setCopied] = useState(false);
+  const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
+  const [inviteSent, setInviteSent] = useState(false);
+  const [sender, setSender] = useState<{
+    id: string;
+    full_name?: string;
+  } | null>(null);
 
-    const [fullName, setFullName] = useState("");
-    const [email, setEmail] = useState("");
-    const [role, setRole] = useState("user");
-    const [status, setStatus] = useState("active");
+  useEffect(() => {
+    if (open) {
+      setMeetingId(generateMeetingId());
+      setSelectedUsers([]);
+      setCopied(false);
+      setInviteSent(false);
+    }
+  }, [open]);
 
-    const [loading, setLoading] = useState(false);
+  useEffect(() => {
+    const loadSender = async () => {
+      const {
+        data: { user },
+      } = await supabaseClient.auth.getUser();
 
-    // const defaultPassword = process.env.DEFAULT_USER_PASSWORD!;
+      if (!user) return;
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
+      const { data: profile } = await supabaseClient
+        .from("profiles")
+        .select("full_name")
+        .eq("id", user.id)
+        .single();
 
-        setLoading(true);
-
-        try {
-            //             const res = await supabaseServer
-            //   .from("profiles")
-            //   .select("*")
-            const res = await fetch("/api/users", {
-                cache: "no-store",
-
-                // const res = await fetch("/api/users", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    email,
-                    full_name: fullName,
-                    role,
-                    status,
-                    // password: defaultPassword
-                }),
-            });
-
-            const data = await res.json();
-
-            if (!res.ok) {
-                console.log("CREATE USER ERROR:", data.error);
-                return;
-            }
-
-            console.log("USER CREATED:", data);
-
-            // reset form
-            setFullName("");
-            setEmail("");
-            setRole("user");
-            setStatus("active");
-
-            // close modal
-            onOpenChange(false);
-
-            // refresh table
-            router.refresh();
-        } catch (err) {
-            console.log("NETWORK ERROR:", err);
-        } finally {
-            setLoading(false);
-        }
+      setSender({
+        id: user.id,
+        full_name: profile?.full_name,
+      });
     };
 
-    return (
-  <Dialog open={open} onOpenChange={onOpenChange}>
-   <DialogContent
-  className="
-    w-[90vw]
-    max-w-[540px]
-    rounded-xl
-    border border-white/50
-    bg-white/70
-    p-0
-    overflow-hidden
-    backdrop-blur-xl
-    shadow-[0_20px_50px_-12px_rgba(99,102,241,0.15)]
-  "
->
-      {/* Atmospheric background blobs */}
-      {/* <div className="pointer-events-none absolute -bottom-20 -right-20 h-96 w-96 rounded-full bg-[#4648d4]/10 blur-[100px]" />
-      <div className="pointer-events-none absolute -top-20 -left-20 h-96 w-96 rounded-full bg-[#8127cf]/10 blur-[100px]" /> */}
+    void loadSender();
+  }, []);
 
-      {/* Header */}
-      <DialogHeader className="px-5 pt-8 pb-6 sm:px-10 sm:pt-10">
-        <div className="flex items-start justify-between">
-          <div>
-            <DialogTitle className="text-xl font-semibold text-[#131b2e] sm:text-2xl">
-              Create New User
-            </DialogTitle>
+  const handleInvite = async () => {
+    if (!selectedUsers.length) return;
 
-            <DialogDescription className="mt-1 text-sm text-[#464554]">
-              Add a new member to your workspace and assign access permissions.
-            </DialogDescription>
-          </div>
-        </div>
-      </DialogHeader>
+    const notifications = selectedUsers.map((userId) => ({
+      user_id: userId,
+      title: "Meeting Invitation",
+      message: "You were invited to join a registered-user meeting",
+      type: "meeting_invite",
+      meeting_id: meetingId,
+      read: false,
+      sender_id: sender?.id,
+      sender_name: sender?.full_name,
+    }));
 
-      {/* Form */}
-      <form
-        className="space-y-6 px-5 pb-5 sm:px-10"
-        onSubmit={handleSubmit}
-      >
-        {/* Full Name */}
-        <div className="space-y-1">
-          <Label className="text-sm font-medium text-[#464554]">
-            Full Name
-          </Label>
+    const { error } = await supabaseClient
+      .from("notifications")
+      .insert(notifications);
 
-          <Input
-            placeholder="e.g. Alex Rivera"
-            value={fullName}
-            onChange={(e) => setFullName(e.target.value)}
-            className="
-              h-12
-              rounded-xl
-              border-[#c7c4d7]
-              bg-white
-              focus-visible:ring-[#4648d4]/20
-              focus-visible:ring-4
-            "
-          />
-        </div>
+    if (error) {
+      console.error("Invite failed:", error.message);
+      return;
+    }
 
-        {/* Email */}
-        <div className="space-y-1">
-          <Label className="text-sm font-medium text-[#464554]">
-            Email Address
-          </Label>
+    setInviteSent(true);
+    setSelectedUsers([]);
 
-          <Input
-            type="email"
-            placeholder="alex@company.com"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="
-              h-12
-              rounded-xl
-              border-[#c7c4d7]
-              bg-white
-              focus-visible:ring-[#4648d4]/20
-              focus-visible:ring-4
-            "
-          />
-        </div>
+    setTimeout(() => {
+      setInviteSent(false);
+    }, 2500);
+  };
 
-        {/* Role + Status */}
-        <div className="grid grid-cols-2 gap-4">
-          {/* Role */}
-          <div className="space-y-1">
-            <Label className="text-sm font-medium text-[#464554]">
-              Role
-            </Label>
+  const copyToClipboard = async () => {
+    try {
+      await navigator.clipboard.writeText(meetingId);
 
-            <Select value={role} onValueChange={setRole}>
-              <SelectTrigger
+      setCopied(true);
+
+      setTimeout(() => {
+        setCopied(false);
+      }, 2500);
+    } catch (err) {
+      console.error("Copy failed:", err);
+    }
+  };
+
+  return (
+    <>
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent
+          className="
+            w-[90vw]
+            max-w-[540px]
+            p-0
+            overflow-visible
+            rounded-xl
+            bg-white/70
+            backdrop-blur-xl
+            border border-white/50
+            shadow-[0_20px_50px_-12px_rgba(99,102,241,0.15)]
+          "
+        >
+          <div className="relative">
+            <div className="px-5 pt-8 pb-6 space-y-1 sm:px-10 sm:pt-10">
+              <h2 className="text-2xl font-semibold text-[#131b2e]">
+                Create Meeting
+              </h2>
+
+              <p className="text-sm text-[#464554]">
+                Start a meeting for registered dashboard users only.
+              </p>
+            </div>
+
+            <div className="px-5 space-y-6 sm:px-10">
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-[#464554] ml-1">
+                  Meeting ID
+                </label>
+
+                <div className="flex gap-3">
+                  <div className="relative flex-1">
+                    <Input
+                      value={meetingId}
+                      readOnly
+                      className="
+                        h-12
+                        bg-white
+                        border-[#c7c4d7]
+                        rounded-xl
+                        font-semibold
+                        tracking-wider
+                        text-primary
+                        focus-visible:ring-[#4648d4]/20
+                        focus-visible:ring-4
+                        cursor-default
+                      "
+                    />
+
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[#4648d4]/40">
+                      <Lock size={18} />
+                    </span>
+                  </div>
+
+                  <Button
+                    type="button"
+                    onClick={copyToClipboard}
+                    className="
+                      h-12
+                      px-4
+                      rounded-xl
+                      bg-white/20
+                      border border-white/50
+                      text-primary
+                      hover:bg-white/40
+                    "
+                  >
+                    <Copy size={20} />
+                    {copied ? "Copied" : "Copy"}
+                  </Button>
+                </div>
+
+                <p className="text-xs text-[#464554]/70 ml-1">
+                  Only logged-in dashboard users can join with this ID.
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-[#464554] ml-1">
+                  Invite Registered Users
+                </label>
+
+                <div className="flex gap-3">
+                  <div className="relative flex-1">
+                    <UsersMultiSelect
+                      selectedUsers={selectedUsers}
+                      setSelectedUsers={setSelectedUsers}
+                    />
+                  </div>
+
+                  <Button
+                    disabled={selectedUsers.length === 0 || inviteSent}
+                    type="button"
+                    onClick={handleInvite}
+                    className="
+                      h-12
+                      px-4
+                      rounded-xl
+                      bg-white/20
+                      border border-white/50
+                      text-primary
+                      hover:bg-white/40
+                    "
+                  >
+                    {inviteSent ? (
+                      <>
+                        <Check size={18} />
+                        Sent
+                      </>
+                    ) : (
+                      <>
+                        <UserPlus size={18} />
+                        Invite
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
+
+              <div className="flex gap-3 p-4 rounded-xl bg-[#6063ee]/10 border border-[#6063ee]/10">
+                <Info className="shrink-0 text-primary" />
+
+                <div>
+                  <p className="text-sm font-medium text-[#131b2e]">
+                    Registered users only
+                  </p>
+
+                  <p className="text-xs text-[#464554]">
+                    This meeting does not generate a public guest link.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div
+              className="
+                px-5 py-6
+                flex flex-col gap-3
+                sm:px-10
+                sm:flex-row
+                sm:justify-end
+                sm:gap-4
+              "
+            >
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={() => onOpenChange(false)}
                 className="
-                  h-12
                   rounded-xl
+                  text-[#464554]
                   border-[#c7c4d7]
-                  bg-white
+                  hover:bg-[#dae2fd]
+                  h-11 w-full sm:w-auto
                 "
               >
-                <SelectValue placeholder="Select role" />
-              </SelectTrigger>
+                Cancel
+              </Button>
 
-              <SelectContent className="z-[99999] rounded-xl border border-[#c7c4d7] bg-white shadow-lg">
-                <SelectItem value="user">User</SelectItem>
-                <SelectItem value="admin">Admin</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Status */}
-          <div className="space-y-1">
-            <Label className="text-sm font-medium text-[#464554]">
-              Status
-            </Label>
-
-            <Select value={status} onValueChange={setStatus}>
-              <SelectTrigger
+              <Button
                 className="
-                  h-12
                   rounded-xl
-                  border-[#c7c4d7]
-                  bg-white
+                  text-white
+                  bg-primary
+                  hover:shadow-lg hover:shadow-[#4648d4]/30
+                  h-11 w-full sm:w-auto
                 "
+                onClick={() => {
+                  onStartMeeting?.(meetingId);
+                  onOpenChange(false);
+                }}
               >
-                <SelectValue placeholder="Select status" />
-              </SelectTrigger>
-
-              <SelectContent className="z-[99999] rounded-xl border border-[#c7c4d7] bg-white shadow-lg">
-                <SelectItem value="active">Active</SelectItem>
-                <SelectItem value="inactive">Inactive</SelectItem>
-              </SelectContent>
-            </Select>
+                Start Meeting
+              </Button>
+            </div>
           </div>
-        </div>
-
-        {/* Footer */}
-        <div className="-mx-5 flex flex-col gap-3 px-5 pt-2 sm:-mx-10 sm:flex-row sm:justify-end sm:gap-4 sm:px-10">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => onOpenChange(false)}
-            className="
-              w-full
-              rounded-xl
-              border-[#c7c4d7]
-              text-[#464554]
-              hover:bg-[#dae2fd]
-              sm:w-auto
-              h-11
-            "
-          >
-            Cancel
-          </Button>
-
-          <Button
-            disabled={loading}
-            className={`
-              w-full
-              rounded-xl
-              bg-primary
-              text-white
-              transition-all
-              hover:shadow-[0_0_20px_rgba(70,72,212,0.4)]
-              sm:w-auto
-              h-11
-              ${loading ? "cursor-not-allowed opacity-50" : ""}
-            `}
-          >
-            Create User
-          </Button>
-        </div>
-      </form>
-    </DialogContent>
-  </Dialog>
-);
+        </DialogContent>
+      </Dialog>
+    </>
+  );
 }

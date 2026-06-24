@@ -23,6 +23,16 @@ export default function UsersMultiSelect({
 
     const ref = useRef<HTMLDivElement>(null);
 
+    const formatName = (name: string) => {
+        if (!name) return "";
+
+        const cleaned = name.replace(/\s+/g, ""); // remove spaces
+
+        if (cleaned.length <= 4) return cleaned;
+
+        return cleaned.slice(0, 4) + "...";
+    };
+
     useEffect(() => {
         function handleClickOutside(e: MouseEvent) {
             if (
@@ -113,9 +123,10 @@ export default function UsersMultiSelect({
             text-primary
             text-xs
             font-medium
-          "
+        "
+                                            title={user.full_name} // hover shows full name
                                         >
-                                            {user.full_name}
+                                            {formatName(user.full_name)}
                                         </div>
                                     ))}
 

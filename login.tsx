@@ -1,3 +1,8 @@
+
+
+
+
+
 "use client";
 
 import { useEffect, useState } from "react";
@@ -7,6 +12,9 @@ import { Mail, Lock, User, Loader2, Eye, EyeOff } from "lucide-react";
 import { login } from "@/lib/auth";
 import { supabaseClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
+import TiltedCard from "@/components/TiltedCard";
+import logo from "@/public/logo.png";
+import Grainient from "@/components/Grainient";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -70,46 +78,64 @@ export default function LoginPage() {
     <main className="min-h-screen flex">
 
       {/* LEFT SIDE */}
-      <section
-        className="
+   <section
+  className="
     hidden md:flex
     md:w-1/2
     relative overflow-hidden
-    bg-gradient-to-br from-primary/15 via-white to-secondary/15
     p-8 lg:p-12
     flex-col justify-between
   "
-      >
+>
+  <div className="relative w-full h-[600px]">
+    {/* Background */}
+    <div className="relative w-full h-[550px] rounded-3xl overflow-hidden">
+      <Grainient
+        color1="#c4acf3"
+        color2="#fcd0e5"
+        color3="#ceb8fa"
+        timeSpeed={0.25}
+        colorBalance={0}
+        warpStrength={1}
+        warpFrequency={5}
+        warpSpeed={2}
+        warpAmplitude={50}
+        blendAngle={0}
+        blendSoftness={0.05}
+        rotationAmount={500}
+        noiseScale={2}
+        grainAmount={0.1}
+        grainScale={2}
+        grainAnimated={false}
+        contrast={1.5}
+        gamma={1}
+        saturation={1}
+        centerX={0}
+        centerY={0}
+        zoom={0.9}
+      />
+    </div>
 
-        {/* decorative blobs */}
-        <div className="absolute w-[500px] h-[500px] bg-gradient-to-r from-indigo-400 to-purple-500 blur-[120px] opacity-20 rounded-full top-[-10%] left-[-10%]" />
-        <div className="absolute w-[500px] h-[500px] bg-gradient-to-r from-purple-400 to-pink-500 blur-[120px] opacity-20 rounded-full bottom-[-10%] right-[-10%]" />
-
-        {/* branding */}
-        <div className="relative z-10 text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 text-transparent bg-clip-text">
-
-        </div>
-
-        <div className="relative z-10 max-w-md">
-          <h1 className="text-3xl lg:text-4xl font-bold text-gray-900 leading-tight">
-            Seamless video collaboration in real time
-          </h1>
-          <p className="mt-4 text-base lg:text-lg text-gray-600">
-            Connect, communicate, and create with high-fidelity WebRTC technology built for modern teams.
-          </p>
-        </div>
-
-        <div className="relative z-10 flex items-center gap-3">
-          <div className="flex -space-x-2">
-            {/* <div className="w-8 h-8 rounded-full bg-gray-300 border-2 border-white" />
-            <div className="w-8 h-8 rounded-full bg-gray-400 border-2 border-white" />
-            <div className="w-8 h-8 rounded-full bg-gray-500 border-2 border-white" /> */}
-          </div>
-          <span className="text-sm text-gray-500">
-            Trusted by 50k+ teams worldwide
-          </span>
-        </div>
-      </section>
+    {/* Card */}
+    <div className="absolute inset-0 z-10 flex items-center justify-center">
+      <TiltedCard
+        imageSrc={logo.src}
+        altText="Logo"
+        captionText="WebRTC"
+        containerHeight="300px"
+        containerWidth="300px"
+        imageHeight="300px"
+        imageWidth="300px"
+        rotateAmplitude={12}
+        scaleOnHover={1.05}
+        showMobileWarning={false}
+        showTooltip
+        displayOverlayContent
+        overlayContent={<p className="tilted-card-demo-text"></p>}
+      />
+    </div>
+  </div>
+</section>
 
       {/* RIGHT SIDE */}
       <section
@@ -121,9 +147,7 @@ export default function LoginPage() {
     sm:px-6
   "
       >
-
-        <div
-          className="
+        {/* className="
     w-full
     max-w-md
     border
@@ -133,7 +157,10 @@ export default function LoginPage() {
     bg-white/80 
     shadow-2xl 
     backdrop-blur-xl 
-  "
+  " */}
+
+        <div
+          
         >
 
           {/* header */}
