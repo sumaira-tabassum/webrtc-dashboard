@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Mail, Lock, User, Loader2, Eye, EyeOff } from "lucide-react";
+import { Mail, Lock, User } from "lucide-react";
 import { login } from "@/lib/auth";
 import { supabaseClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
@@ -12,74 +12,52 @@ export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
 
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    setError("");
+    const { data, error } = await supabaseClient.auth.signInWithPassword({
+      email,
+      password,
+    });
 
-    setLoading(true);
-
-    try {
-      const { data, error } = await supabaseClient.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (error) {
-        console.log("LOGIN ERROR:" + error.message);
-        setError(error.message);
-        return;
-      }
-
-      const user = data?.user;
-
-      if (!user) {
-        console.log("No user returned");
-        return;
-      }
-
-      const { data: profile, error: profileError } = await supabaseClient
-        .from("profiles")
-        .select("role")
-        .eq("id", user.id)
-        .maybeSingle();
-
-      console.log("PROFILE ERROR:", profileError);
-
-      if (profileError) {
-        console.log("PROFILE ERROR:" + profileError.message);
-        return;
-      }
-      if (profile?.role === "admin") {
-        router.replace("/users");
-      } else {
-        router.replace("/meet");
-      }
-    }
-    finally {
-      setLoading(false);
+    if (error) {
+      console.log("LOGIN ERROR:", error.message);
+      return;
     }
 
+    const user = data?.user;
+
+    if (!user) {
+      console.log("No user returned");
+      return;
+    }
+
+    const { data: profile, error: profileError } = await supabaseClient
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .maybeSingle();
+
+    console.log("PROFILE ERROR:", profileError);
+
+    if (profileError) {
+      console.log("PROFILE ERROR:", profileError.message);
+      return;
+    }
+
+    if (profile?.role === "admin") {
+      router.replace("/users");
+    } else {
+      router.replace("/meet");
+    }
   };
 
   return (
     <main className="min-h-screen flex">
 
       {/* LEFT SIDE */}
-      <section
-        className="
-    hidden md:flex
-    md:w-1/2
-    relative overflow-hidden
-    bg-gradient-to-br from-primary/15 via-white to-secondary/15
-    p-8 lg:p-12
-    flex-col justify-between
-  "
-      >
+      <section className="hidden md:flex w-1/2 relative overflow-hidden bg-gradient-to-br from-indigo-50 via-white to-purple-50 p-12 flex-col justify-between">
 
         {/* decorative blobs */}
         <div className="absolute w-[500px] h-[500px] bg-gradient-to-r from-indigo-400 to-purple-500 blur-[120px] opacity-20 rounded-full top-[-10%] left-[-10%]" />
@@ -91,10 +69,10 @@ export default function LoginPage() {
         </div>
 
         <div className="relative z-10 max-w-md">
-          <h1 className="text-3xl lg:text-4xl font-bold text-gray-900 leading-tight">
+          <h1 className="text-4xl font-bold text-gray-900 leading-tight">
             Seamless video collaboration in real time
           </h1>
-          <p className="mt-4 text-base lg:text-lg text-gray-600">
+          <p className="mt-4 text-gray-600 text-lg">
             Connect, communicate, and create with high-fidelity WebRTC technology built for modern teams.
           </p>
         </div>
@@ -112,42 +90,22 @@ export default function LoginPage() {
       </section>
 
       {/* RIGHT SIDE */}
-      <section
-        className="
-    w-full md:w-1/2
-    flex items-center justify-center
-    bg-white
-    px-4 py-6
-    sm:px-6
-  "
-      >
+      <section className="w-full md:w-1/2 flex items-center justify-center bg-white p-6">
 
-        <div
-          className="
-    w-full
-    max-w-md
-    border
-    bg-white/60
-    p-6 sm:p-8
-    rounded-3xl  
-    bg-white/80 
-    shadow-2xl 
-    backdrop-blur-xl 
-  "
-        >
+        <div className="w-full max-w-md rounded-2xl border shadow-xl p-8 bg-white">
 
           {/* header */}
           <div className="mb-6">
-            <h2 className="text-xl sm:text-2xl font-semibold text-gray-900">
+            <h2 className="text-2xl font-semibold text-gray-900">
               Welcome Back
             </h2>
-            <p className="mt-1 text-sm sm:text-base text-gray-500">
+            <p className="text-gray-500 mt-1">
               Sign in to continue to your workspace
             </p>
           </div>
 
           {/* form */}
-          <form className="space-y-6" onSubmit={handleLogin}>
+          <form className="space-y-4" onSubmit={handleLogin}>
 
             {/* email */}
             <div className="space-y-2">
@@ -168,61 +126,29 @@ export default function LoginPage() {
               <label className="text-sm text-gray-600">Password</label>
               <div className="relative">
                 <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                <div className="relative">
-                  <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-
-                  <Input
-                    type={showPassword ? "text" : "password"}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="••••••••"
-                    className="pl-10 pr-10 h-11"
-                  />
-
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                  >
-                    {showPassword ? (
-                      <EyeOff className="h-4 w-4" />
-                    ) : (
-                      <Eye className="h-4 w-4" />
-                    )}
-                  </button>
-                </div>
+                <Input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className="pl-10 h-11"
+                />
               </div>
             </div>
 
-            {error && (
-              <div className="text-sm text-red-600">
-                {error}
-              </div>
-            )}
-
             {/* button */}
             <Button
-              disabled={loading}
               type="submit"
               className="
-              w-full
-              h-12
-              bg-primary
-              text-white
-              border-primary
-              transition-colors
-              my-8
-              "
+    w-full
+    h-11
+    border-purple-600
+    text-white
+    bg-purple-600
+    transition-colors
+  "
             >
-              {loading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Signing In...
-                </>
-              ) : (
-                "Sign In"
-              )}
-
+              Sign In
             </Button>
 
             {/* divider */}
