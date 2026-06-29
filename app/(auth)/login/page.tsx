@@ -3,180 +3,238 @@
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Mail, Lock, User } from "lucide-react";
-import { login } from "@/lib/auth";
+import { Mail, Lock, Loader2, Eye, EyeOff } from "lucide-react";
 import { supabaseClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
+import TiltedCard from "@/components/TiltedCard";
+import logo from "@/public/logo.png";
+import { Marquee } from "@/components/ui/marquee";
 
 export default function LoginPage() {
   const router = useRouter();
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    const { data, error } = await supabaseClient.auth.signInWithPassword({
-      email,
-      password,
-    });
+    setError("");
+    setLoading(true);
 
-    if (error) {
-      console.log("LOGIN ERROR:", error.message);
-      return;
-    }
+    try {
+      const { data, error } = await supabaseClient.auth.signInWithPassword({
+        email,
+        password,
+      });
 
-    const user = data?.user;
+      if (error) {
+        setError(error.message);
+        return;
+      }
 
-    if (!user) {
-      console.log("No user returned");
-      return;
-    }
+      const user = data?.user;
 
-    const { data: profile, error: profileError } = await supabaseClient
-      .from("profiles")
-      .select("role")
-      .eq("id", user.id)
-      .maybeSingle();
+      if (!user) {
+        setError("No user returned.");
+        return;
+      }
 
-    console.log("PROFILE ERROR:", profileError);
+      const { data: profile, error: profileError } = await supabaseClient
+        .from("profiles")
+        .select("role")
+        .eq("id", user.id)
+        .maybeSingle();
 
-    if (profileError) {
-      console.log("PROFILE ERROR:", profileError.message);
-      return;
-    }
+      if (profileError) {
+        setError(profileError.message);
+        return;
+      }
 
-    if (profile?.role === "admin") {
-      router.replace("/users");
-    } else {
-      router.replace("/meet");
+      if (profile?.role === "admin") {
+        router.replace("/users");
+      } else {
+        router.replace("/meet");
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
+  const stats = [
+    {
+      title: "HD",
+      subtitle: "Video calls",
+      border: "border-[#9e70fc]/10",
+      text: "text-[#9e70fc]",
+    },
+    {
+      title: "24/7",
+      subtitle: "Access",
+      border: "border-[#F3B5D3]/20",
+      text: "text-[#d985b1]",
+    },
+    {
+      title: "SSL",
+      subtitle: "Protected",
+      border: "border-[#9e70fc]/10",
+      text: "text-[#9e70fc]",
+    },
+  ];
+
   return (
-    <main className="min-h-screen flex">
-
+    <main className="min-h-screen bg-[#f7f8fb] flex">
       {/* LEFT SIDE */}
-      <section className="hidden md:flex w-1/2 relative overflow-hidden bg-gradient-to-br from-indigo-50 via-white to-purple-50 p-12 flex-col justify-between">
+      <section className="hidden  md:flex md:w-1/2 p-6 lg:py-10 lg:pl-20 ">
+        <div className="relative flex min-h-full w-full overflow-hidden rounded-[2rem] bg-[#EEE5FF] px-10 py-8 shadow-2xl">
+          <div className="absolute inset-0 bg-[linear-gradient(145deg,#A77BFF_0%,#C6A8FF_50%,#E9A7C8_100%)]" />
+          <div className="relative z-10 flex w-full flex-col justify-between">
+            <div>
+              {/* <div className="inline-flex items-center rounded-full border border-[#9e70fc]/15 bg-white/65 px-4 py-2 text-sm font-medium text-[#7b55d8] shadow-sm backdrop-blur">
+          Secure workspace access
+        </div> */}
 
-        {/* decorative blobs */}
-        <div className="absolute w-[500px] h-[500px] bg-gradient-to-r from-indigo-400 to-purple-500 blur-[120px] opacity-20 rounded-full top-[-10%] left-[-10%]" />
-        <div className="absolute w-[500px] h-[500px] bg-gradient-to-r from-purple-400 to-pink-500 blur-[120px] opacity-20 rounded-full bottom-[-10%] right-[-10%]" />
+              <h1 className="max-w-md text-4xl font-semibold tracking-normal text-gray-950 lg:text-3xl">
+                Seamless video collaboration in real time.
+              </h1>
 
-        {/* branding */}
-        <div className="relative z-10 text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 text-transparent bg-clip-text">
+              <p className="mt-4 max-w-sm text-sm leading-6 text-gray-500">
+                Connect, communicate, and create with high-fidelity WebRTC technology built for modern teams.
+              </p>
+            </div>
 
-        </div>
+            <div className="flex flex-1 items-center justify-center ">
+              <div className="relative">
+                <div className="absolute inset-0 scale-110 rounded-[2rem] bg-[#9e70fc]/10 blur-2xl" />
 
-        <div className="relative z-10 max-w-md">
-          <h1 className="text-4xl font-bold text-gray-900 leading-tight">
-            Seamless video collaboration in real time
-          </h1>
-          <p className="mt-4 text-gray-600 text-lg">
-            Connect, communicate, and create with high-fidelity WebRTC technology built for modern teams.
-          </p>
-        </div>
+                <TiltedCard
+                  imageSrc={logo.src}
+                  altText="Logo"
+                  captionText="WebRTC"
+                  containerHeight="300px"
+                  containerWidth="300px"
+                  imageHeight="300px"
+                  imageWidth="300px"
+                  rotateAmplitude={14}
+                  scaleOnHover={1.07}
+                  showMobileWarning={false}
+                  showTooltip
+                  displayOverlayContent
+                  overlayContent={<p className="tilted-card-demo-text"></p>}
+                />
+              </div>
+            </div>
 
-        <div className="relative z-10 flex items-center gap-3">
-          <div className="flex -space-x-2">
-            {/* <div className="w-8 h-8 rounded-full bg-gray-300 border-2 border-white" />
-            <div className="w-8 h-8 rounded-full bg-gray-400 border-2 border-white" />
-            <div className="w-8 h-8 rounded-full bg-gray-500 border-2 border-white" /> */}
+            <Marquee
+              pauseOnHover
+              className="[--duration:18s] [--gap:1.5rem]"
+            >
+              {stats.map((card) => (
+                <div
+                  key={card.title}
+                  className={`w-[160px] rounded-2xl border ${card.border} bg-white/65 px-10 py-2 text-center shadow-sm backdrop-blur`}
+                >
+                  <p className={`text-2xl font-semibold ${card.text}`}>
+                    {card.title}
+                  </p>
+
+                  <p className="text-xs text-gray-500">
+                    {card.subtitle}
+                  </p>
+                </div>
+              ))}
+            </Marquee>
           </div>
-          <span className="text-sm text-gray-500">
-            Trusted by 50k+ teams worldwide
-          </span>
         </div>
       </section>
 
       {/* RIGHT SIDE */}
-      <section className="w-full md:w-1/2 flex items-center justify-center bg-white p-6">
+      <section className="flex w-full items-center justify-center px-5 py-8 md:w-1/2 sm:px-8">
+        <div className="w-full max-w-md">
+          <div className="mb-8">
+            {/* <p className="mb-3 text-sm font-medium text-primary">Sign in</p> */}
 
-        <div className="w-full max-w-md rounded-2xl border shadow-xl p-8 bg-white">
-
-          {/* header */}
-          <div className="mb-6">
-            <h2 className="text-2xl font-semibold text-gray-900">
-              Welcome Back
+            <h2 className="text-3xl font-semibold tracking-normal text-gray-950">
+              Sign In
             </h2>
-            <p className="text-gray-500 mt-1">
-              Sign in to continue to your workspace
+
+            <p className="mt-2 text-sm leading-6 text-gray-500">
+              Enter your credentials to continue to your workspace.
             </p>
           </div>
 
-          {/* form */}
-          <form className="space-y-4" onSubmit={handleLogin}>
-
-            {/* email */}
+          <form className="space-y-5" onSubmit={handleLogin}>
             <div className="space-y-2">
-              <label className="text-sm text-gray-600">Email</label>
+              <label className="text-sm font-medium text-gray-700">Email</label>
+
               <div className="relative">
-                <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                <Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
                 <Input
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="name@company.com"
-                  className="pl-10 h-11"
+                  className="h-12 rounded-xl border-gray-200 bg-white pl-10 shadow-sm transition focus-visible:ring-2 focus-visible:ring-primary/25"
                 />
               </div>
             </div>
 
-            {/* password */}
             <div className="space-y-2">
-              <label className="text-sm text-gray-600">Password</label>
+              <label className="text-sm font-medium text-gray-700">
+                Password
+              </label>
+
               <div className="relative">
-                <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                <Lock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+
                 <Input
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="pl-10 h-11"
+                  className="h-12 rounded-xl border-gray-200 bg-white pl-10 pr-11 shadow-sm transition focus-visible:ring-2 focus-visible:ring-primary/25"
                 />
+
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((value) => !value)}
+                  className="absolute right-3 top-1/2 rounded-md p-1 -translate-y-1/2 text-gray-400 transition hover:bg-gray-100 hover:text-gray-700"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                </button>
               </div>
             </div>
 
-            {/* button */}
+            {error && (
+              <div className="text-sm text-red-600">
+                {error}
+              </div>
+            )}
+
             <Button
+              disabled={loading}
               type="submit"
-              className="
-    w-full
-    h-11
-    border-purple-600
-    text-white
-    bg-purple-600
-    transition-colors
-  "
+              className="mt-3 h-12 w-full rounded-xl text-sm font-semibold shadow-lg shadow-primary/20 transition hover:translate-y-[-1px] text-white"
             >
-              Sign In
+              {loading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Signing in...
+                </>
+              ) : (
+                "Sign In"
+              )}
             </Button>
-
-            {/* divider */}
-            {/* <div className="flex items-center gap-4">
-              <div className="h-px bg-gray-200 flex-1" />
-              <span className="text-xs text-gray-400">OR</span>
-              <div className="h-px bg-gray-200 flex-1" />
-            </div> */}
-
-            {/* demo */}
-            {/* <Button variant="outline" className="w-full h-11 gap-2">
-              <User className="h-4 w-4" />
-              Continue as demo user
-            </Button> */}
-
           </form>
-
-          {/* footer */}
-          {/* <p className="text-center text-sm text-gray-500 mt-6">
-            Don’t have an account?{" "}
-            <span className="text-indigo-600 font-medium cursor-pointer">
-              Get started
-            </span>
-          </p> */}
-
         </div>
       </section>
-
     </main>
   );
 }

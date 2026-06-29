@@ -13,6 +13,7 @@ import { usePathname } from "next/navigation";
 import { global } from "styled-jsx/css";
 import { logout } from "@/lib/auth";
 import { LayoutDashboard } from "lucide-react";
+import GradientText from "../GradientText";
 
 export default function Sidebar({
   isOpen,
@@ -69,9 +70,14 @@ export default function Sidebar({
             </div>
 
             <div>
-            <h1 className="bg-primary bg-clip-text text-2xl font-bold text-transparent">
+            <GradientText
+            colors={["#5227FF","#FF9FFC","#B497CF"]}
+            animationSpeed={8}
+            showBorder={false}
+            className="custom-class"
+            >
               WebRTC
-            </h1>
+            </GradientText>
 
             {/* <p className="mt-1 text-xs uppercase tracking-[0.25em] text-gray-500">
               Admin Console
