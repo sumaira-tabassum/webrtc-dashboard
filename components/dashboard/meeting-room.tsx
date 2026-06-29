@@ -7,6 +7,8 @@ import RemoteVideo from "@/components/remote-video";
 import { createPeerConnection } from "@/lib/webrtc";
 import { MeetingSignaling, type ParticipantMeta } from "@/lib/signaling";
 
+import Dock from "../Dock";
+
 type Props = {
   meetingId: string;
   signaling: MeetingSignaling;
@@ -452,6 +454,32 @@ export default function MeetingRoom({
     ? mobileLayouts[participantCount] ?? 2
     : desktopLayouts[participantCount] ?? 3;
 
+  const dockItems = [
+  {
+    icon: isAudioMuted ? <MicOff size={20} /> : <Mic size={20} />,
+    label: "Mute",
+    onClick: toggleAudio,
+    className: isAudioMuted
+      ? "bg-red-500 text-white"
+      : "bg-white/10 text-white hover:bg-white/20",
+  },
+  {
+    icon: isVideoMuted ? <VideoOff size={20} /> : <Video size={20} />,
+    label: "Video",
+    onClick: toggleVideo,
+    className: isVideoMuted
+      ? "bg-red-500 text-white"
+      : "bg-white/10 text-white hover:bg-white/20",
+  },
+  {
+    icon: <PhoneOff size={20} />,
+    label: "End",
+    onClick: handleLeave,
+    className:
+      "bg-red-600 text-white hover:bg-red-700",
+  },
+];
+
   return (
     <div className="group relative w-full min-h-[calc(100dvh-5rem)] bg-[#0c0d12] overflow-hidden text-white">
       <header
@@ -520,88 +548,28 @@ export default function MeetingRoom({
         </div>
       </div>
 
-      <nav
-        className="
-          absolute
-          bottom-4
-          left-1/2
-          z-50
-          flex
-          -translate-x-1/2
-          items-center
-          gap-3
-          rounded-full
-          border
-          border-white/10
-          bg-white/10
-          px-3
-          py-2
-          backdrop-blur-xl
-          shadow-2xl
-          max-w-[95vw]
-          sm:bottom-8
-          sm:gap-6
-          sm:px-6
-          sm:py-3
-          opacity-100
-          md:opacity-0
-          transition-opacity
-          duration-300
-          md:group-hover:opacity-100
-        "
-      >
-        <button
-          onClick={toggleAudio}
-          className="group flex flex-col items-center gap-1"
-        >
-          <div
-            className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center transition-all duration-200 group-active:scale-95 ${
-              isAudioMuted
-                ? "bg-red-500 text-white"
-                : "bg-white/10 text-white hover:bg-white/20"
-            }`}
-          >
-            {isAudioMuted ? <MicOff size={20} /> : <Mic size={20} />}
-          </div>
-
-          <span className="hidden text-[10px] text-white/60 sm:block">
-            Mute
-          </span>
-        </button>
-
-        <button
-          onClick={toggleVideo}
-          className="group flex flex-col items-center gap-1"
-        >
-          <div
-            className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center transition-all duration-200 group-active:scale-95 ${
-              isVideoMuted
-                ? "bg-red-500 text-white"
-                : "bg-white/10 text-white hover:bg-white/20"
-            }`}
-          >
-            {isVideoMuted ? <VideoOff size={20} /> : <Video size={20} />}
-          </div>
-
-          <span className="hidden text-[10px] text-white/60 sm:block">
-            Video
-          </span>
-        </button>
-
-        <div className="mx-1 h-8 w-px bg-white/20" />
-
-        <button
-          onClick={handleLeave}
-          className="group flex flex-col items-center gap-1"
-        >
-          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center bg-red-600 text-white hover:bg-red-700 transition-all duration-200 group-active:scale-95">
-            <PhoneOff size={20} />
-          </div>
-
-          <span className="hidden text-[10px] text-white/60 sm:block">
-            End
-          </span>
-        </button>
+  <nav
+  className="
+    absolute
+    bottom-4
+    left-1/2
+    z-50
+    -translate-x-1/2
+    max-w-[95vw]
+    sm:bottom-8
+    opacity-100
+    md:opacity-0
+    transition-opacity
+    duration-300
+    md:group-hover:opacity-100
+  "
+>
+        <Dock
+  items={dockItems}
+  panelHeight={64}
+  baseItemSize={48}
+  magnification={64}
+/>
       </nav>
     </div>
   );

@@ -238,10 +238,10 @@ function MeetPageContent() {
   }
 
   return (
-    <div className="px-4 py-4 space-y-8 sm:px-6 sm:space-y-10">
+    <div className="space-y-8 px-4 py-4 sm:px-6">
       <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
         <div className="min-w-0">
-          <h2 className="text-2xl font-bold text-gray-900 sm:text-3xl">
+          <h2 className="my-6 text-2xl font-bold text-gray-900 sm:text-3xl">
             Meetings
           </h2>
 
