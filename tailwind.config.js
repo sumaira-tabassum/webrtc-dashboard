@@ -6,7 +6,12 @@ module.exports = {
     "./src/**/*.{ts,tsx}"
   ],
   theme: {
-    extend: {}
+    extend: {
+      colors: {
+      primary: "var(--primary)",
+      secondary: "var(--secondary)"
+    }
   },
   plugins: []
+}
 };
