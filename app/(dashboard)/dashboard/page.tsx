@@ -1,54 +1,95 @@
 "use client";
 
 import StatsCards from "@/components/dashboard/stats-cards";
-import { LayoutDashboard, UserPlus } from "lucide-react";
 import { supabaseClient } from "@/lib/supabase/client";
 import { useEffect, useState } from "react";
 
+type DashboardUser = {
+  id: string;
+  status: string | null;
+};
+
 export default function DashboardPage() {
-    const [user, setUser] = useState<any>(null);
-    const [profile, setProfile] = useState<any>(null);
+  const [profile, setProfile] = useState<any>(null);
+  const [totalUsers, setTotalUsers] = useState(0);
+  const [activeUsers, setActiveUsers] = useState(0);
+  const [statsLoading, setStatsLoading] = useState(true);
 
-    // Fetch user from supabase
-    useEffect(() => {
-        const loadUser = async () => {
-            const { data: { user } } = await supabaseClient.auth.getUser();
+  useEffect(() => {
+    const loadUser = async () => {
+      const { data: { user } } = await supabaseClient.auth.getUser();
 
-            if (!user) return;
+      if (!user) return;
 
-            setUser(user);
+      const { data: profile } = await supabaseClient
+        .from("profiles")
+        .select("role, full_name")
+        .eq("id", user.id)
+        .single();
 
-            const { data: profile } = await supabaseClient
-                .from("profiles")
-                .select("role, full_name")
-                .eq("id", user.id)
-                .single();
+      setProfile(profile);
+    };
 
-            setProfile(profile);
-        };
+    loadUser();
+  }, []);
 
-        loadUser();
-    }, []);
+  useEffect(() => {
+    const loadUserStats = async () => {
+      setStatsLoading(true);
 
-   return (
-  <div className="space-y-8 px-4 py-4 sm:px-6">
-    <div>
-      <h1 className="my-6 text-2xl font-bold text-gray-900 sm:text-3xl">
-        Hello,
-        <span
-          className="ml-2 break-words"
-          title={profile?.full_name}
-        >
-          {profile?.full_name || "User"}
-        </span>
-      </h1>
+      try {
+        const res = await fetch("/api/users", {
+          cache: "no-store",
+        });
 
-      <p className="text-sm text-gray-500 sm:text-base">
-        Welcome Back!
-      </p>
+        const data: DashboardUser[] = await res.json();
+
+        if (!res.ok || !Array.isArray(data)) {
+          setTotalUsers(0);
+          setActiveUsers(0);
+          return;
+        }
+
+        setTotalUsers(data.length);
+
+        setActiveUsers(
+          data.filter((user) => user.status?.toLowerCase() === "active").length
+        );
+      } catch (err) {
+        console.log("DASHBOARD STATS ERROR:", err);
+        setTotalUsers(0);
+        setActiveUsers(0);
+      } finally {
+        setStatsLoading(false);
+      }
+    };
+
+    loadUserStats();
+  }, []);
+
+  return (
+    <div className="space-y-8 px-4 py-4 sm:px-6">
+      <div>
+        <h1 className="my-6 text-2xl font-bold text-gray-900 sm:text-3xl dark:text-white">
+          Hello,
+          <span
+            className="ml-2 break-words"
+            title={profile?.full_name}
+          >
+            {profile?.full_name || "User"}
+          </span>
+        </h1>
+
+        <p className="text-sm text-gray-500 sm:text-base dark:text-white/55">
+          Welcome Back!
+        </p>
+      </div>
+
+      <StatsCards
+        totalUsers={totalUsers}
+        activeUsers={activeUsers}
+        loading={statsLoading}
+      />
     </div>
-
-    <StatsCards />
-  </div>
-);
+  );
 }

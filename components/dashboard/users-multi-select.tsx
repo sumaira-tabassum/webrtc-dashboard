@@ -90,6 +90,8 @@ export default function UsersMultiSelect({
           rounded-xl
           border border-[#c7c4d7]
           bg-white
+          dark:bg-white/10
+          dark:text-white
           flex items-center justify-between
           tracking-wider
           cursor-default
@@ -138,6 +140,8 @@ export default function UsersMultiSelect({
             rounded-full
             bg-gray-100
             text-gray-500
+            dark:bg-white/10
+            dark:text-white/60
             text-xs
             font-medium
           "
@@ -166,8 +170,10 @@ export default function UsersMultiSelect({
                     className="
             absolute z-50 mt-2 w-full
             bg-white
+            dark:bg-[#19172b]
             rounded-xl
             border border-[#c7c4d7]
+            dark:border-white/10
             shadow-lg
             max-h-56 
             overflow-auto
@@ -184,6 +190,7 @@ export default function UsersMultiSelect({
         w-full px-4 py-3
         flex items-center
         hover:bg-[#f4f5ff]
+        dark:hover:bg-white/10
         transition
     "
                         >
@@ -191,7 +198,7 @@ export default function UsersMultiSelect({
                             <div className="flex-1 min-w-0 text-left">
                                 <p
                                     className="
-                text-sm font-medium text-[#131b2e]
+                text-sm font-medium text-[#131b2e] dark:text-white
                 truncate
             "
                                     title={user.full_name}
@@ -201,7 +208,7 @@ export default function UsersMultiSelect({
 
                                 <p
                                     className="
-                text-xs text-gray-500
+                text-xs text-gray-500 dark:text-white/50
                 truncate
             "
                                     title={user.email}

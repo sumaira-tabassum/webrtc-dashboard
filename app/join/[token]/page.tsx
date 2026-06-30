@@ -152,6 +152,7 @@ export default function GuestJoinPage({ params }: PageProps) {
           onLeave={handleLeave}
           currentParticipantName={name.trim() || "Guest"}
           isGuest
+          fullHeight
         />
       </main>
     );
@@ -159,10 +160,10 @@ export default function GuestJoinPage({ params }: PageProps) {
 
   if (loadingMeeting) {
     return (
-      <main className="min-h-screen bg-[#faf8ff] flex items-center justify-center px-4">
-        <div className="flex items-center gap-3 rounded-2xl border bg-white px-6 py-5 shadow-sm">
+      <main className="min-h-screen bg-[#faf8ff] flex items-center justify-center px-4 dark:bg-[#0f1020]">
+        <div className="flex items-center gap-3 rounded-2xl border bg-white px-6 py-5 shadow-sm dark:border-white/10 dark:bg-white/10">
           <Loader2 className="h-5 w-5 animate-spin text-primary" />
-          <span className="text-sm text-gray-600">Loading meeting...</span>
+          <span className="text-sm text-gray-600 dark:text-white/70">Loading meeting...</span>
         </div>
       </main>
     );
@@ -170,24 +171,24 @@ export default function GuestJoinPage({ params }: PageProps) {
 
   if (error && !meeting) {
     return (
-      <main className="min-h-screen bg-[#faf8ff] flex items-center justify-center px-4">
-        <div className="w-full max-w-md rounded-3xl border bg-white p-8 text-center shadow-xl">
+      <main className="min-h-screen bg-[#faf8ff] flex items-center justify-center px-4 dark:bg-[#0f1020]">
+        <div className="w-full max-w-md rounded-3xl border bg-white p-8 text-center shadow-xl dark:border-white/10 dark:bg-white/10">
           <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-red-50 text-red-600">
             <Video size={26} />
           </div>
 
-          <h1 className="text-2xl font-bold text-gray-900">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
             Meeting unavailable
           </h1>
 
-          <p className="mt-3 text-sm text-gray-500">{error}</p>
+          <p className="mt-3 text-sm text-gray-500 dark:text-white/60">{error}</p>
         </div>
       </main>
     );
   }
 
   return (
-    <main className="min-h-screen bg-[#faf8ff] px-4 py-8">
+    <main className="min-h-screen bg-[#faf8ff] px-4 py-8 text-gray-950 transition-colors dark:bg-[#0f1020] dark:text-white">
       <div className="mx-auto grid min-h-[calc(100vh-4rem)] w-full max-w-6xl items-center gap-8 lg:grid-cols-[1fr_420px]">
         <section className="space-y-6">
           <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-primary text-white shadow-lg">
@@ -199,46 +200,46 @@ export default function GuestJoinPage({ params }: PageProps) {
               Guest access
             </p>
 
-            <h1 className="mt-3 text-4xl font-bold tracking-tight text-gray-950 sm:text-5xl">
+            <h1 className="mt-3 text-4xl font-bold tracking-tight text-gray-950 sm:text-5xl dark:text-white">
               Ready to join?
             </h1>
 
-            <p className="mt-4 max-w-xl text-base leading-7 text-gray-600">
+            <p className="mt-4 max-w-xl text-base leading-7 text-gray-600 dark:text-white/65">
               Enter your name before joining. You won’t need an account, and
               you’ll go straight into the meeting room.
             </p>
           </div>
 
-          <div className="rounded-3xl border border-white/60 bg-white/70 p-5 shadow-sm backdrop-blur-xl">
-            <p className="text-sm text-gray-500">Meeting</p>
+          <div className="rounded-3xl border border-white/60 bg-white/70 p-5 shadow-sm backdrop-blur-xl dark:border-white/10 dark:bg-white/10">
+            <p className="text-sm text-gray-500 dark:text-white/50">Meeting</p>
 
-            <h2 className="mt-1 text-xl font-semibold text-gray-900">
+            <h2 className="mt-1 text-xl font-semibold text-gray-900 dark:text-white">
               {meeting?.title ?? "Instant Meeting"}
             </h2>
 
-            <p className="mt-2 text-sm text-gray-500">
+            <p className="mt-2 text-sm text-gray-500 dark:text-white/55">
               Hosted by{" "}
-              <span className="font-medium text-gray-700">
+              <span className="font-medium text-gray-700 dark:text-white/75">
                 {meeting?.hostName ?? "Host"}
               </span>
             </p>
           </div>
         </section>
 
-        <section className="rounded-3xl border border-white/60 bg-white/80 p-6 shadow-2xl backdrop-blur-xl sm:p-8">
+        <section className="rounded-3xl border border-white/60 bg-white/80 p-6 shadow-2xl backdrop-blur-xl sm:p-8 dark:border-white/10 dark:bg-white/10">
           <div className="mb-6">
-            <h2 className="text-2xl font-semibold text-gray-950">
+            <h2 className="text-2xl font-semibold text-gray-950 dark:text-white">
               Join meeting
             </h2>
 
-            <p className="mt-2 text-sm text-gray-500">
+            <p className="mt-2 text-sm text-gray-500 dark:text-white/55">
               Please enter the name other participants will see.
             </p>
           </div>
 
           <form onSubmit={handleJoin} className="space-y-5">
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">
+              <label className="text-sm font-medium text-gray-700 dark:text-white/70">
                 Your name
               </label>
 
@@ -247,7 +248,7 @@ export default function GuestJoinPage({ params }: PageProps) {
                 onChange={(event) => setName(event.target.value)}
                 placeholder="Alex Morgan"
                 maxLength={60}
-                className="h-12 rounded-xl bg-white"
+                className="h-12 rounded-xl bg-white dark:border-white/10 dark:bg-white/10 dark:text-white dark:placeholder:text-white/35"
                 autoFocus
               />
             </div>

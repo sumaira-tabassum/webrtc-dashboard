@@ -78,16 +78,16 @@ export default function UsersTable() {
 
 
  return (
-  <div className="overflow-hidden rounded-2xl border border-white/40 bg-white/70 shadow-xl backdrop-blur-xl">
+  <div className="overflow-hidden rounded-2xl border border-white/40 bg-white/70 shadow-xl backdrop-blur-xl dark:border-white/10 dark:bg-white/10">
     {/* FILTERS */}
-    <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/20 bg-white/20 p-4">
+    <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/20 bg-white/20 p-4 dark:border-white/10 dark:bg-white/5">
       <div className="flex flex-wrap gap-2">
         <button
           onClick={() => setFilter("all")}
           className={`rounded-full px-4 py-1.5 text-sm font-medium transition ${
             filter === "all"
               ? "bg-primary text-white"
-              : "text-gray-600 hover:bg-white/50"
+              : "text-gray-600 hover:bg-white/50 dark:text-white/65 dark:hover:bg-white/10"
           }`}
         >
           All
@@ -98,7 +98,7 @@ export default function UsersTable() {
           className={`rounded-full px-4 py-1.5 text-sm font-medium transition ${
             filter === "admin"
               ? "bg-primary text-white"
-              : "text-gray-600 hover:bg-white/50"
+              : "text-gray-600 hover:bg-white/50 dark:text-white/65 dark:hover:bg-white/10"
           }`}
         >
           Admins
@@ -109,7 +109,7 @@ export default function UsersTable() {
           className={`rounded-full px-4 py-1.5 text-sm font-medium transition ${
             filter === "user"
               ? "bg-primary text-white"
-              : "text-gray-600 hover:bg-white/50"
+              : "text-gray-600 hover:bg-white/50 dark:text-white/65 dark:hover:bg-white/10"
           }`}
         >
           Users
@@ -121,7 +121,7 @@ export default function UsersTable() {
     <div className="overflow-x-auto">
       <table className="w-full min-w-[700px] border-collapse text-left">
         <thead>
-          <tr className="border-b text-xs uppercase tracking-widest text-gray-500">
+          <tr className="border-b text-xs uppercase tracking-widest text-gray-500 dark:border-white/10 dark:text-white/45">
             <th className="px-6 py-4">Name & Email</th>
             <th className="px-6 py-4">Role</th>
             <th className="px-6 py-4">Status</th>
@@ -129,11 +129,11 @@ export default function UsersTable() {
           </tr>
         </thead>
 
-        <tbody className="divide-y divide-gray-100">
+        <tbody className="divide-y divide-gray-100 dark:divide-white/10">
           {filteredUsers.map((u) => (
             <tr
               key={u.id}
-              className="group transition hover:bg-white/50"
+              className="group transition hover:bg-white/50 dark:hover:bg-white/10"
             >
               {/* USER */}
               <td className="px-6 py-4">
@@ -143,11 +143,11 @@ export default function UsersTable() {
                   </div>
 
                   <div className="min-w-0">
-                    <p className="font-medium text-gray-900">
+                    <p className="font-medium text-gray-900 dark:text-white">
                       {u.full_name || "No Name"}
                     </p>
 
-                    <p className="truncate text-sm text-gray-500">
+                    <p className="truncate text-sm text-gray-500 dark:text-white/50">
                       {u.email}
                     </p>
                   </div>
@@ -159,8 +159,8 @@ export default function UsersTable() {
                 <span
                   className={`rounded-full px-3 py-1 text-xs font-semibold uppercase ${
                     u.role === "admin"
-                      ? "bg-purple-100 text-primary"
-                      : "bg-gray-100 text-gray-600"
+                      ? "bg-purple-100 text-primary dark:bg-primary dark:text-white"
+                      : "bg-gray-100 text-gray-600 dark:bg-white/10 dark:text-white/65"
                   }`}
                 >
                   {u.role}
@@ -178,7 +178,7 @@ export default function UsersTable() {
                     }`}
                   />
 
-                  <span className="text-sm text-gray-600">
+                  <span className="text-sm text-gray-600 dark:text-white/65">
                     {u.status}
                   </span>
                 </div>
@@ -188,7 +188,7 @@ export default function UsersTable() {
               <td className="px-6 py-4 text-right">
                 <div className="flex justify-end gap-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition">
                   <button
-                    className="rounded-lg p-2 text-primary hover:bg-purple-50"
+                    className="rounded-lg p-2 text-primary hover:bg-purple-50 dark:hover:bg-primary/15"
                     onClick={() => {
                       setSelectedUser(u);
                       setEditOpen(true);
@@ -200,7 +200,7 @@ export default function UsersTable() {
                   <button
                     onClick={() => handleDelete(u.id)}
                     disabled={deletingId === u.id}
-                    className="rounded-lg p-2 text-red-600 transition hover:bg-red-50 disabled:opacity-50"
+                    className="rounded-lg p-2 text-red-600 transition hover:bg-red-50 disabled:opacity-50 dark:hover:bg-red-500/10"
                     title="Delete user"
                   >
                     <Trash2 size={18} />
@@ -214,8 +214,8 @@ export default function UsersTable() {
     </div>
 
     {/* FOOTER */}
-    <div className="flex flex-col gap-3 border-t border-white/20 bg-white/10 p-4 sm:flex-row sm:items-center sm:justify-between">
-      <p className="text-sm text-gray-500">
+    <div className="flex flex-col gap-3 border-t border-white/20 bg-white/10 p-4 sm:flex-row sm:items-center sm:justify-between dark:border-white/10 dark:bg-white/5">
+      <p className="text-sm text-gray-500 dark:text-white/50">
         Showing {filteredUsers.length} out of {users.length} users.
       </p>
     </div>

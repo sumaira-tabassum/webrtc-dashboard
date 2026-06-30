@@ -68,7 +68,7 @@ const shouldSidebarBeOpen =
       }}
     >
 
-      <div className="min-h-screen bg-[#faf8ff]">
+      <div className="min-h-screen bg-[#faf8ff] text-gray-950 transition-colors dark:bg-[#0f1020] dark:text-white">
         <Sidebar
   isOpen={shouldSidebarBeOpen}
   onClose={() => setSidebarOpen(false)}

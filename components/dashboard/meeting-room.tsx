@@ -9,6 +9,12 @@ import { MeetingSignaling, type ParticipantMeta } from "@/lib/signaling";
 
 import Dock from "../Dock";
 
+type PendingOffer = {
+  offer: RTCSessionDescriptionInit;
+  from: string;
+  to: string;
+};
+
 type Props = {
   meetingId: string;
   signaling: MeetingSignaling;
@@ -16,12 +22,8 @@ type Props = {
   currentParticipantName?: string;
   isGuest?: boolean;
   onMeetingStateChange?: (inMeeting: boolean) => void;
-};
 
-type PendingOffer = {
-  offer: RTCSessionDescriptionInit;
-  from: string;
-  to: string;
+  fullHeight?: boolean;
 };
 
 export default function MeetingRoom({
@@ -31,6 +33,7 @@ export default function MeetingRoom({
   currentParticipantName = "You",
   isGuest = false,
   onMeetingStateChange,
+  fullHeight = false,
 }: Props) {
   const [seconds, setSeconds] = useState(0);
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
@@ -481,7 +484,11 @@ export default function MeetingRoom({
 ];
 
   return (
-    <div className="group relative w-full min-h-[calc(100dvh-5rem)] bg-[#0c0d12] overflow-hidden text-white">
+    <div
+  className={`group relative w-full ${
+    fullHeight ? "min-h-[100dvh]" : "min-h-[calc(100dvh-5rem)]"
+  } bg-[#0c0d12] overflow-hidden text-white`}
+>
       <header
         className="
           absolute top-0 left-0 z-50

@@ -1,7 +1,7 @@
 "use client";
 
 import { Suspense, useContext, useEffect, useRef, useState } from "react";
-import { ChevronDown, LogIn, Video, Zap } from "lucide-react";
+import { ChevronDown, LogIn, Video, Zap, Check } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 import { MeetingContext } from "@/app/(dashboard)/layout";
@@ -30,6 +30,7 @@ function MeetPageContent() {
   const [instantOpen, setInstantOpen] = useState(false);
   const [joinOpen, setJoinOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [guestLinkCopied, setGuestLinkCopied] = useState(false);
 
   const [activeMeetingId, setActiveMeetingId] = useState<string | null>(null);
   const [joining, setJoining] = useState(false);
@@ -193,16 +194,21 @@ function MeetPageContent() {
     };
   }, []);
 
-  const copyGuestUrl = async () => {
-    if (!guestUrl) return;
+const copyGuestUrl = async () => {
+  if (!guestUrl) return;
 
-    try {
-      await navigator.clipboard.writeText(guestUrl);
-      alert("Guest link copied");
-    } catch (err) {
-      console.error("Failed to copy guest link:", err);
-    }
-  };
+  try {
+    await navigator.clipboard.writeText(guestUrl);
+
+    setGuestLinkCopied(true);
+
+    setTimeout(() => {
+      setGuestLinkCopied(false);
+    }, 2000);
+  } catch (err) {
+    console.error("Failed to copy guest link:", err);
+  }
+};
 
   if (activeMeetingId && signalingRef.current) {
     return (
@@ -211,7 +217,7 @@ function MeetPageContent() {
           <button
             onClick={copyGuestUrl}
             className="
-              absolute right-4 top-4 z-[60]
+              absolute right-8 top-4 z-[60]
               rounded-lg
               bg-white/10
               px-4 py-2
@@ -233,6 +239,38 @@ function MeetPageContent() {
           currentParticipantName={currentUser?.displayName ?? "You"}
           onMeetingStateChange={setInMeeting}
         />
+
+        <div
+  className={`
+    fixed bottom-10 left-1/2 -translate-x-1/2 z-[100]
+    transition-all duration-500
+    ${
+      guestLinkCopied
+        ? "opacity-100 translate-y-0"
+        : "opacity-0 translate-y-10 pointer-events-none"
+    }
+  `}
+>
+  <div
+    className="
+      px-6 py-3
+      rounded-full
+      bg-white/70
+      dark:bg-[#19172b]/90
+      backdrop-blur-xl
+      border border-white/30
+      dark:border-white/10
+      shadow-lg
+      flex items-center gap-2
+    "
+  >
+    <Check className="text-green-500" size={18} />
+
+    <span className="text-sm text-[#131b2e] dark:text-white">
+      Guest link copied
+    </span>
+  </div>
+</div>
       </div>
     );
   }
@@ -241,11 +279,11 @@ function MeetPageContent() {
     <div className="space-y-8 px-4 py-4 sm:px-6">
       <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
         <div className="min-w-0">
-          <h2 className="my-6 text-2xl font-bold text-gray-900 sm:text-3xl">
+          <h2 className="my-6 text-2xl font-bold text-gray-900 sm:text-3xl dark:text-white">
             Meetings
           </h2>
 
-          <p className="mt-1 text-sm text-gray-500 sm:text-base">
+          <p className="mt-1 text-sm text-gray-500 sm:text-base dark:text-white/55">
             Create, join and manage video conferences.
           </p>
         </div>
@@ -276,7 +314,7 @@ function MeetPageContent() {
                 className="
                   absolute right-0 z-30 mt-2 w-full min-w-[260px]
                   overflow-hidden rounded-2xl border border-white/60
-                  bg-white/95 shadow-xl backdrop-blur-xl
+                  bg-white/95 shadow-xl backdrop-blur-xl dark:border-white/10 dark:bg-[#19172b]/95
                 "
               >
                 <button
@@ -287,17 +325,17 @@ function MeetPageContent() {
                   }}
                   className="
                     flex w-full items-start gap-3 px-4 py-4 text-left
-                    transition hover:bg-indigo-50
+                    transition hover:bg-indigo-50 dark:hover:bg-white/10
                   "
                 >
                   <Zap className="mt-0.5 text-primary" size={20} />
 
                   <span>
-                    <span className="block text-sm font-semibold text-gray-900">
+                    <span className="block text-sm font-semibold text-gray-900 dark:text-white">
                       Start instant meeting
                     </span>
 
-                    <span className="mt-1 block text-xs leading-5 text-gray-500">
+                    <span className="mt-1 block text-xs leading-5 text-gray-500 dark:text-white/55">
                       Creates a guest link for people without accounts.
                     </span>
                   </span>
@@ -311,17 +349,17 @@ function MeetPageContent() {
                   }}
                   className="
                     flex w-full items-start gap-3 border-t border-gray-100 px-4 py-4 text-left
-                    transition hover:bg-indigo-50
+                    transition hover:bg-indigo-50 dark:border-white/10 dark:hover:bg-white/10
                   "
                 >
                   <Video className="mt-0.5 text-primary" size={20} />
 
                   <span>
-                    <span className="block text-sm font-semibold text-gray-900">
+                    <span className="block text-sm font-semibold text-gray-900 dark:text-white">
                       Create meeting
                     </span>
 
-                    <span className="mt-1 block text-xs leading-5 text-gray-500">
+                    <span className="mt-1 block text-xs leading-5 text-gray-500 dark:text-white/55">
                       For registered dashboard users only.
                     </span>
                   </span>

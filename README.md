@@ -10,9 +10,7 @@ A modern full-stack video conferencing dashboard built with Next.js, Supabase, a
 
 ## Live Demo
 
-🔗 <https://webrtc-dashboard-355rez2xy-sumaira-tabassums-projects.vercel.app/>
-
-> **Note:** This project is under active development, so the live demo may change as new updates are deployed.
+🔗 <https://webrtc-dashboard-one.vercel.app/>
 
 ## Features
 

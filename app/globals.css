@@ -19,6 +19,45 @@
   :root {
     --primary: #9e70fc;
     --secondary:  #bfb7ff;
+    --background: #faf8ff;
+    --foreground: #131b2e;
+    --card: rgba(255, 255, 255, 0.72);
+    --card-foreground: #131b2e;
+    --popover: rgba(255, 255, 255, 0.92);
+    --popover-foreground: #131b2e;
+    --muted: rgba(158, 112, 252, 0.1);
+    --muted-foreground: #5f5d6e;
+    --border: rgba(255, 255, 255, 0.5);
+    --input: rgba(255, 255, 255, 0.6);
+    --ring: rgba(158, 112, 252, 0.28);
+    color-scheme: light;
+  }
+
+  .dark {
+    --primary: #a987ff;
+    --secondary: #6f5db8;
+    --background: #0f1020;
+    --foreground: #f6f3ff;
+    --card: rgba(26, 24, 44, 0.78);
+    --card-foreground: #f6f3ff;
+    --popover: rgba(24, 22, 39, 0.96);
+    --popover-foreground: #f6f3ff;
+    --muted: rgba(255, 255, 255, 0.08);
+    --muted-foreground: #bcb5d3;
+    --border: rgba(255, 255, 255, 0.12);
+    --input: rgba(255, 255, 255, 0.1);
+    --ring: rgba(169, 135, 255, 0.35);
+    color-scheme: dark;
+  }
+
+  html {
+    background: var(--background);
+  }
+
+  body {
+    background: var(--background);
+    color: var(--foreground);
+    transition: background-color 180ms ease, color 180ms ease;
   }
 }
 
