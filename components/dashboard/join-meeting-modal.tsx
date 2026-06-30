@@ -56,17 +56,19 @@ export default function JoinMeetingModal({ open, onOpenChange, onJoin }: Props) 
         rounded-xl
         border border-white/50
         bg-white/70
+        dark:border-white/10
+        dark:bg-[#19172b]/90
         backdrop-blur-xl
         shadow-[0_20px_50px_-12px_rgba(99,102,241,0.15)]
       "
     >
       {/* HEADER */}
       <DialogHeader className="space-y-1 px-5 py-6 sm:px-6">
-        <DialogTitle className="text-xl sm:text-2xl font-semibold text-[#131b2e]">
+        <DialogTitle className="text-xl sm:text-2xl font-semibold text-[#131b2e] dark:text-white">
           Join Meeting
         </DialogTitle>
 
-        <DialogDescription className="text-sm text-[#464554]">
+        <DialogDescription className="text-sm text-[#464554] dark:text-white/60">
           Enter a meeting ID to join an existing session.
         </DialogDescription>
       </DialogHeader>
@@ -77,7 +79,7 @@ export default function JoinMeetingModal({ open, onOpenChange, onJoin }: Props) 
         className="space-y-5 px-5 pb-6 sm:px-6"
       >
         <div className="space-y-2">
-          <label className="text-sm text-[#464554]">
+          <label className="text-sm text-[#464554] dark:text-white/70">
             Meeting ID
           </label>
 
@@ -89,13 +91,15 @@ export default function JoinMeetingModal({ open, onOpenChange, onJoin }: Props) 
               h-12
               font-mono tracking-[0.15em]
               bg-white/50
+              dark:bg-white/10
+              dark:text-white
               border border-outline-variant
               focus-visible:ring-2 focus-visible:ring-[#4648d4]/20
               ${error ? "border-red-500" : ""}
             `}
           />
 
-          <p className="text-xs text-[#464554]/70">
+          <p className="text-xs text-[#464554]/70 dark:text-white/45">
             Ask the host for the meeting ID
           </p>
         </div>
@@ -111,8 +115,10 @@ export default function JoinMeetingModal({ open, onOpenChange, onJoin }: Props) 
               w-full
               rounded-xl
               text-[#464554]
+              dark:text-white/70
               border-[#c7c4d7]
               hover:bg-[#dae2fd]
+              dark:hover:bg-white/10
               sm:w-auto
             "
           >

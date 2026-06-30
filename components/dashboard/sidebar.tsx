@@ -42,8 +42,8 @@ export default function Sidebar({
       <aside
         className={`
         fixed left-0 top-0 z-50 h-full w-[80vw] max-w-64
-        border-r border-white/30
-        bg-white/70 backdrop-blur-xl shadow-xl
+        border-r border-white/30 dark:border-white/10
+        bg-white/70 backdrop-blur-xl shadow-xl dark:bg-[#111025]/85
         transition-transform duration-300
 
           ${isOpen
@@ -92,7 +92,7 @@ export default function Sidebar({
               href="/dashboard"
               className={`flex items-center gap-3 rounded-xl px-4 py-3 transition ${isActive("/dashboard")
                 ? "bg-primary text-white font-semibold shadow-md"
-                : "text-gray-600 hover:bg-indigo-50 hover:text-indigo-600"
+                : "text-gray-600 hover:bg-indigo-50 hover:text-indigo-600 dark:text-white/70 dark:hover:bg-white/10 dark:hover:text-white"
                 }`}
             >
               <LayoutDashboard size={20} />
@@ -105,7 +105,7 @@ export default function Sidebar({
                 href="/users"
                 className={`flex items-center gap-3 rounded-xl px-4 py-3 transition ${isActive("/users")
                   ? "bg-primary text-white font-semibold shadow-md"
-                  : "text-gray-600 hover:bg-indigo-50 hover:text-indigo-600"
+                  : "text-gray-600 hover:bg-indigo-50 hover:text-indigo-600 dark:text-white/70 dark:hover:bg-white/10 dark:hover:text-white"
                   }`}
               >
                 <Users size={20} />
@@ -118,7 +118,7 @@ export default function Sidebar({
               href="/meet"
               className={`flex items-center gap-3 rounded-xl px-4 py-3 transition ${isActive("/meet")
                 ? "bg-primary text-white font-semibold shadow-md"
-                : "text-gray-600 hover:bg-indigo-50 hover:text-indigo-600"
+                : "text-gray-600 hover:bg-indigo-50 hover:text-indigo-600 dark:text-white/70 dark:hover:bg-white/10 dark:hover:text-white"
                 }`}
             >
               <Video size={20} />
@@ -127,14 +127,14 @@ export default function Sidebar({
 
           </nav>
 
-          <div className="space-y-2 border-t border-gray-200 pt-4">
+          <div className="space-y-2 border-t border-gray-200 pt-4 dark:border-white/10">
 
             {/* <button className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-gray-600 transition hover:bg-indigo-50 hover:text-indigo-600">
             <HelpCircle size={20} />
             Support
           </button> */}
 
-            <button className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-red-500 transition hover:bg-red-100"
+            <button className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-red-500 transition hover:bg-red-100 dark:hover:bg-red-500/10"
               onClick={logout}>
               <LogOut size={20} />
               Sign Out

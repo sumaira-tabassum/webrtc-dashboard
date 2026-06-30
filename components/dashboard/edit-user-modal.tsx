@@ -102,18 +102,20 @@ export default function EditUserModal({
         overflow-hidden
         rounded-xl
         bg-white/70
+        dark:bg-[#19172b]/90
         backdrop-blur-xl
         border border-white/50
+        dark:border-white/10
         shadow-[0_20px_50px_-12px_rgba(99,102,241,0.15)]
       "
     >
       {/* HEADER */}
       <DialogHeader className="px-5 pt-8 pb-5 sm:px-8">
-        <DialogTitle className="text-xl sm:text-2xl font-semibold text-[#131b2e]">
+        <DialogTitle className="text-xl sm:text-2xl font-semibold text-[#131b2e] dark:text-white">
           Edit User
         </DialogTitle>
 
-        <DialogDescription className="mt-1 text-sm text-[#464554]">
+        <DialogDescription className="mt-1 text-sm text-[#464554] dark:text-white/60">
           Update member details and permissions
         </DialogDescription>
       </DialogHeader>
@@ -132,6 +134,8 @@ export default function EditUserModal({
             className="
               h-12
               bg-white/50
+              dark:bg-white/10
+              dark:text-white
               border border-outline-variant
               focus-visible:ring-2 focus-visible:ring-[#4648d4]/20
             "
@@ -147,6 +151,8 @@ export default function EditUserModal({
             className="
               h-12
               bg-white/50
+              dark:bg-white/10
+              dark:text-white
               border border-outline-variant
               focus-visible:ring-2 focus-visible:ring-[#4648d4]/20
             "
@@ -163,13 +169,15 @@ export default function EditUserModal({
                 className="
                   h-12
                   bg-white/50
+                  dark:bg-white/10
+                  dark:text-white
                   border border-outline-variant
                 "
               >
                 <SelectValue />
               </SelectTrigger>
 
-              <SelectContent className="z-[200]">
+              <SelectContent className="z-[200] dark:border-white/10 dark:bg-[#19172b] dark:text-white">
                 <SelectItem value="user">User</SelectItem>
                 <SelectItem value="admin">Admin</SelectItem>
               </SelectContent>
@@ -184,13 +192,15 @@ export default function EditUserModal({
                 className="
                   h-12
                   bg-white/50
+                  dark:bg-white/10
+                  dark:text-white
                   border border-outline-variant
                 "
               >
                 <SelectValue />
               </SelectTrigger>
 
-              <SelectContent className="z-[200]">
+              <SelectContent className="z-[200] dark:border-white/10 dark:bg-[#19172b] dark:text-white">
                 <SelectItem value="active">Active</SelectItem>
                 <SelectItem value="inactive">Inactive</SelectItem>
               </SelectContent>
@@ -211,9 +221,11 @@ export default function EditUserModal({
   rounded-xl
 
   text-[#464554]
+  dark:text-white/70
   border border-[#c7c4d7]
 
   bg-white/40
+  dark:bg-white/10
   backdrop-blur-md
 
   transition-all duration-200 ease-out
