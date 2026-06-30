@@ -114,6 +114,8 @@ export default function NotificationPanel({
         rounded-xl
         border border-white/40
         bg-white/100
+        dark:border-white/10
+        dark:bg-[#19172b]/95
         shadow-2xl
         backdrop-blur-xl
         w-[80vw]
@@ -128,8 +130,8 @@ export default function NotificationPanel({
       "
     >
       {/* HEADER */}
-      <div className="flex items-center justify-between border-b border-gray-200/40 px-4 py-3">
-        <h2 className="font-semibold text-gray-800">
+      <div className="flex items-center justify-between border-b border-gray-200/40 px-4 py-3 dark:border-white/10">
+        <h2 className="font-semibold text-gray-800 dark:text-white">
           Notifications
         </h2>
 
@@ -144,7 +146,7 @@ export default function NotificationPanel({
       {/* BODY */}
       <div className="max-h-[60vh] overflow-y-auto no-scrollbar sm:max-h-[320px]">
         {notifications.length === 0 ? (
-          <p className="p-4 text-sm text-gray-500">
+          <p className="p-4 text-sm text-gray-500 dark:text-white/55">
             No notifications yet
           </p>
         ) : (
@@ -162,17 +164,17 @@ export default function NotificationPanel({
                 px-4 py-3 cursor-pointer border-l-4 transition
                 ${
                   n.read
-                    ? "border-gray-300 bg-white/40 opacity-70"
-                    : "border-primary bg-purple-50/40"
+                    ? "border-gray-300 bg-white/40 opacity-70 dark:border-white/15 dark:bg-white/5"
+                    : "border-primary bg-purple-50/40 dark:bg-primary/10"
                 }
               `}
             >
               <div className="flex items-start justify-between gap-3">
-                <p className="text-sm font-semibold text-gray-800">
+                <p className="text-sm font-semibold text-gray-800 dark:text-white">
                   {n.title}
                 </p>
 
-                <span className="shrink-0 text-xs text-gray-400">
+                <span className="shrink-0 text-xs text-gray-400 dark:text-white/40">
                   {new Date(n.created_at).toLocaleTimeString("en-US", {
                     timeZone: "Asia/Karachi",
                     hour: "2-digit",
@@ -181,11 +183,11 @@ export default function NotificationPanel({
                 </span>
               </div>
 
-              <p className="mt-1 text-xs text-gray-600">
+              <p className="mt-1 text-xs text-gray-600 dark:text-white/65">
                 {n.message}
               </p>
 
-              <div className="mt-2 flex items-center gap-2 text-xs text-gray-500">
+              <div className="mt-2 flex items-center gap-2 text-xs text-gray-500 dark:text-white/50">
                 <Video size={15} />
                 <span>Meeting ID:</span>
 
@@ -194,7 +196,7 @@ export default function NotificationPanel({
                 </span>
               </div>
 
-              <div className="text-xs text-gray-500">
+              <div className="text-xs text-gray-500 dark:text-white/50">
                 From:
                 <span className="ml-1 font-medium">
                   {n.sender_name}
@@ -224,10 +226,10 @@ export default function NotificationPanel({
       </div>
 
       {/* FOOTER */}
-      <div className="border-t border-gray-200/40 p-3 text-center">
-        <span className="text-sm text-gray-500">
+      <div className="border-t border-gray-200/40 p-3 text-center dark:border-white/10">
+        <span className="text-sm text-gray-500 dark:text-white/50">
           Total notifications:{" "}
-          <span className="font-medium text-gray-700">
+          <span className="font-medium text-gray-700 dark:text-white/75">
             {notifications.length}
           </span>
         </span>

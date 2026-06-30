@@ -11,11 +11,11 @@ export default function UsersPage() {
   <div className="space-y-8 px-4 py-4 sm:px-6">
     <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
       <div className="min-w-0">
-        <h1 className="my-6 text-2xl font-bold text-gray-900 sm:text-3xl">
+        <h1 className="my-6 text-2xl font-bold text-gray-900 sm:text-3xl dark:text-white">
           Users
         </h1>
 
-        <p className="mt-1 text-sm text-gray-500 sm:text-base">
+        <p className="mt-1 text-sm text-gray-500 sm:text-base dark:text-white/55">
           Manage team access permissions and monitor activity.
         </p>
       </div>

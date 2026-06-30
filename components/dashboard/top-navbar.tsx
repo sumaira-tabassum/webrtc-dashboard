@@ -2,7 +2,7 @@
 
 import { supabaseClient } from "@/lib/supabase/client";
 import { useEffect, useState } from "react";
-import { Bell, Moon, Search, Menu } from "lucide-react";
+import { Bell, Moon, Search, Menu, Sun } from "lucide-react";
 import { Button } from "../ui/button";
 import NotificationPanel from "./notification-panel";
 import { useContext } from "react";
@@ -30,10 +30,24 @@ export default function TopNavbar({
   const [profile, setProfile] = useState<any>(null);
   const [notifications, setNotifications] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [theme, setTheme] = useState<"light" | "dark">("light");
 
   const unreadCount = notifications.filter(n => !n.read).length;
 
   const router = useRouter();
+
+  useEffect(() => {
+    const isDark = document.documentElement.classList.contains("dark");
+    setTheme(isDark ? "dark" : "light");
+  }, []);
+
+  const toggleTheme = () => {
+    const nextTheme = theme === "dark" ? "light" : "dark";
+
+    document.documentElement.classList.toggle("dark", nextTheme === "dark");
+    localStorage.setItem("theme", nextTheme);
+    setTheme(nextTheme);
+  };
 
   // Fetch user from supabase
   useEffect(() => {
@@ -111,7 +125,7 @@ export default function TopNavbar({
         w-[350px]
         rounded-2xl
         border border-white/40
-        bg-white/80
+        bg-white/80 dark:bg-[#19172b]/95
         backdrop-blur-xl
         shadow-2xl
         p-4
@@ -125,18 +139,18 @@ export default function TopNavbar({
 
                   <div className="flex-1">
 
-                    <h3 className="font-semibold text-sm text-gray-800">
+                    <h3 className="font-semibold text-sm text-gray-800 dark:text-white">
                       Meeting Invitation
                     </h3>
 
-                    <p className="text-xs text-gray-600 mt-1">
+                    <p className="text-xs text-gray-600 mt-1 dark:text-white/70">
                       <span className="font-medium">
                         {newNotification.sender_name}
                       </span>{" "}
                       invited you to join a meeting.
                     </p>
 
-                    <div className="mt-2 text-xs text-gray-500">
+                    <div className="mt-2 text-xs text-gray-500 dark:text-white/50">
                       Meeting ID:
                       <span className="ml-1 font-medium">
                         {newNotification.meeting_id}
@@ -205,8 +219,8 @@ export default function TopNavbar({
     <header
       className={`
       fixed top-0 right-0 left-0 z-30 h-20
-      border-b border-white/30
-      bg-white/70 backdrop-blur-xl
+      border-b border-white/30 dark:border-white/10
+      bg-white/70 backdrop-blur-xl dark:bg-[#111025]/80
 
       ${inMeeting
           ? (
@@ -219,7 +233,7 @@ export default function TopNavbar({
       `}
     >
 
-      <div className="flex h-full items-center justify-between px-4 sm:px-6 lg:px-8">
+      <div className="flex h-full items-center justify-end px-4 sm:px-6 lg:px-8">
 
         {/* <button
             onClick={() => setSidebarOpen(prev => !prev)}
@@ -239,25 +253,28 @@ export default function TopNavbar({
           variant="ghost"
           size="icon"
           className={`
-          ${inMeeting ? "flex" : "lg:hidden"}
-          `}
+    absolute left-4 sm:left-6 lg:left-8
+    ${inMeeting ? "flex" : "lg:hidden"}
+  `}
           onClick={onMenuClick}
         >
           <Menu className="h-5 w-5" />
         </Button>
 
-        <div className="hidden md:block relative w-full max-w-md">
+        {/* <div className="hidden md:block relative w-full max-w-md">
           <Search
             size={18}
-            className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
+            className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 dark:text-white/40"
           />
 
           <input
             type="text"
             placeholder="Search users..."
-            className="w-full rounded-full border border-gray-200 bg-white/50 py-3 pl-11 pr-4 outline-none transition focus:border-indigo-400"
+            className="w-full rounded-full border border-gray-200 bg-white/50 py-3 pl-11 pr-4 text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-indigo-400 dark:border-white/10 dark:bg-white/10 dark:text-white dark:placeholder:text-white/40"
           />
-        </div>
+        </div> */}
+
+
 
         <div className="flex items-center gap-3 sm:gap-5">
 
@@ -265,7 +282,7 @@ export default function TopNavbar({
             onClick={() => setNotifOpen(true)}
             className="relative"
           >
-            <Bell className="text-gray-600" />
+            <Bell className="text-gray-600 dark:text-white/70" />
 
             {unreadCount > 0 && (
               <span className="absolute -top-1 -right-1 min-w-4 h-4 px-1 rounded-full bg-red-500 text-white text-[10px] flex items-center justify-center">
@@ -274,8 +291,18 @@ export default function TopNavbar({
             )}
           </button>
 
-          <button>
-            <Moon className="text-gray-600" />
+          <button
+            type="button"
+            onClick={toggleTheme}
+            className="rounded-full p-2 transition hover:bg-white/50 dark:hover:bg-white/10"
+            aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+            title={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+          >
+            {theme === "dark" ? (
+              <Sun className="text-amber-300" />
+            ) : (
+              <Moon className="text-gray-600" />
+            )}
           </button>
 
           <div className="flex items-center gap-3">
@@ -285,14 +312,14 @@ export default function TopNavbar({
 
               {/* NAME */}
               <p
-                className="font-semibold text-sm text-gray-900 max-w-[140px] truncate"
+                className="font-semibold text-sm text-gray-900 max-w-[140px] truncate dark:text-white"
                 title={profile?.full_name}
               >
                 {profile?.full_name || "User"}
               </p>
 
               {/* ROLE */}
-              <p className="text-xs text-gray-500 capitalize">
+              <p className="text-xs text-gray-500 capitalize dark:text-white/50">
                 {profile?.role || "user"}
               </p>
             </div>

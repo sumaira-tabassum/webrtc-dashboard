@@ -118,8 +118,10 @@ p-0
 overflow-visible
 rounded-xl
 bg-white/70
+dark:bg-[#19172b]/90
 backdrop-blur-xl
 border border-white/50
+dark:border-white/10
 shadow-[0_20px_50px_-12px_rgba(99,102,241,0.15)]
 "
         >
@@ -132,10 +134,10 @@ shadow-[0_20px_50px_-12px_rgba(99,102,241,0.15)]
 
             {/* HEADER */}
             <div className="px-5 pt-8 pb-6 space-y-1 sm:px-10 sm:pt-10">
-              <h2 className="text-2xl font-semibold text-[#131b2e]">
+              <h2 className="text-2xl font-semibold text-[#131b2e] dark:text-white">
                 Create Meeting
               </h2>
-              <p className="text-sm text-[#464554]">
+              <p className="text-sm text-[#464554] dark:text-white/60">
                 Generate a meeting ID and invite participants.
               </p>
             </div>
@@ -145,7 +147,7 @@ shadow-[0_20px_50px_-12px_rgba(99,102,241,0.15)]
 
               {/* Meeting ID */}
               <div className="space-y-2">
-                <label className="text-sm font-medium text-[#464554] ml-1">
+                <label className="text-sm font-medium text-[#464554] ml-1 dark:text-white/70">
                   Meeting ID
                 </label>
 
@@ -157,6 +159,7 @@ shadow-[0_20px_50px_-12px_rgba(99,102,241,0.15)]
                       className="
                       h-12
                       bg-white
+                      dark:bg-white/10
                       border-[#c7c4d7]
                       rounded-xl
                       font-semibold
@@ -181,22 +184,24 @@ shadow-[0_20px_50px_-12px_rgba(99,102,241,0.15)]
                     px-4
                     rounded-xl
                     bg-white/20
+                    dark:bg-white/10
                     border border-white/50
                     text-primary
                     hover:bg-white/40
+                    dark:hover:bg-white/15
                   "
                   > <Copy size={20}></Copy>
                     {copied ? "Copied" : "Copy"}
                   </Button>
                 </div>
 
-                <p className="text-xs text-[#464554]/70 ml-1">
+                <p className="text-xs text-[#464554]/70 ml-1 dark:text-white/45">
                   This ID can be shared with participants to join the session.
                 </p>
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium text-[#464554] ml-1">
+                <label className="text-sm font-medium text-[#464554] ml-1 dark:text-white/70">
                   Invite Participants
                 </label>
 
@@ -219,9 +224,11 @@ shadow-[0_20px_50px_-12px_rgba(99,102,241,0.15)]
                     px-4
                     rounded-xl
                     bg-white/20
+                    dark:bg-white/10
                     border border-white/50
                     text-primary
                     hover:bg-white/40
+                    dark:hover:bg-white/15
                   "
                   >
                     {inviteSent ? (
@@ -243,15 +250,15 @@ shadow-[0_20px_50px_-12px_rgba(99,102,241,0.15)]
               </div>
 
               {/* Info Box */}
-              <div className="flex gap-3 p-4 rounded-xl bg-[#6063ee]/10 border border-[#6063ee]/10">
+              <div className="flex gap-3 p-4 rounded-xl bg-[#6063ee]/10 border border-[#6063ee]/10 dark:bg-primary/10 dark:border-primary/15">
                 {/* <div className="text-[#4648d4]"></div> */}
                 <Info></Info>
 
                 <div>
-                  <p className="text-sm font-medium text-[#131b2e]">
+                  <p className="text-sm font-medium text-[#131b2e] dark:text-white">
                     Instant Sharing
                   </p>
-                  <p className="text-xs text-[#464554]">
+                  <p className="text-xs text-[#464554] dark:text-white/60">
                     Your video and microphone settings will be preserved from your last session.
                   </p>
                 </div>
@@ -276,8 +283,10 @@ sm:gap-4
                 className="
                             rounded-xl
                             text-[#464554]
+                            dark:text-white/70
                             border-[#c7c4d7]
                             hover:bg-[#dae2fd]
+                            dark:hover:bg-white/10
                             h-11 w-full sm:w-auto
                         "
               >
@@ -315,10 +324,10 @@ sm:gap-4
         ${copied ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"}
       `}
       >
-        <div className="px-6 py-3 rounded-full bg-white/70 backdrop-blur-xl border border-white/30 shadow-lg flex items-center gap-2">
+        <div className="px-6 py-3 rounded-full bg-white/70 backdrop-blur-xl border border-white/30 shadow-lg flex items-center gap-2 dark:border-white/10 dark:bg-[#19172b]/90">
           {/* <span className="text-green-500"></span> */}
           <Check className="text-green-500"></Check>
-          <span className="text-sm text-[#131b2e]">
+          <span className="text-sm text-[#131b2e] dark:text-white">
             ID copied to clipboard
           </span>
         </div>
@@ -339,15 +348,17 @@ sm:gap-4
       px-6 py-3
       rounded-full
       bg-white/70
+      dark:bg-[#19172b]/90
       backdrop-blur-xl
       border border-white/30
+      dark:border-white/10
       shadow-lg
       flex items-center gap-2
     "
         >
           <Check className="text-green-500" />
 
-          <span className="text-sm text-[#131b2e]">
+          <span className="text-sm text-[#131b2e] dark:text-white">
             Invitations sent successfully
           </span>
         </div>
