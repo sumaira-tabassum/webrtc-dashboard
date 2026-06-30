@@ -54,11 +54,7 @@ export default function LoginPage() {
         return;
       }
 
-      if (profile?.role === "admin") {
-        router.replace("/users");
-      } else {
-        router.replace("/meet");
-      }
+    router.replace("/dashboard");
     } finally {
       setLoading(false);
     }
