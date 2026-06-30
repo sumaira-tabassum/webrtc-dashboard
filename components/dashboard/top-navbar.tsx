@@ -253,8 +253,9 @@ export default function TopNavbar({
           variant="ghost"
           size="icon"
           className={`
-          ${inMeeting ? "flex" : "lg:hidden"}
-          `}
+    absolute left-4 sm:left-6 lg:left-8
+    ${inMeeting ? "flex" : "lg:hidden"}
+  `}
           onClick={onMenuClick}
         >
           <Menu className="h-5 w-5" />
@@ -272,6 +273,8 @@ export default function TopNavbar({
             className="w-full rounded-full border border-gray-200 bg-white/50 py-3 pl-11 pr-4 text-gray-900 outline-none transition placeholder:text-gray-400 focus:border-indigo-400 dark:border-white/10 dark:bg-white/10 dark:text-white dark:placeholder:text-white/40"
           />
         </div> */}
+
+
 
         <div className="flex items-center gap-3 sm:gap-5">
 
